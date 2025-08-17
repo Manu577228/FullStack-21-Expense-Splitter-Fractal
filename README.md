@@ -22,7 +22,7 @@ It supports both:
 - 🎭 React Icons  
 - 📡 Axios for API calls  
 - 🔔 React Toastify for notifications  
-- 🧩 React Context API (or Redux) for state management  
+- 🧩 React Context API for state management  
 
 ### Backend (Django + SQLite)
 - 🐍 Django REST Framework  
