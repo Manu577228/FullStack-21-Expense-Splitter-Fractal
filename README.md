@@ -35,7 +35,7 @@ It supports both:
 ### 1. Clone the Repo
 ```bash
 git clone https://github.com/Manu577228/expense-splitter-fractal.git
-cd expense-splitter
+cd expense-splitter-fractal
 ```
 
 ### 2. Backend Setup (Django)
