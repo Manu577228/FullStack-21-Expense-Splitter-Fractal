@@ -23,6 +23,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "expense-splitter-fractal-manu-bharadwaj.onrender.com",
+    "expense-splitter-fractal-13.onrender.com",  # Render live domain
 ]
 
 # Installed apps
@@ -127,6 +128,12 @@ SIMPLE_JWT = {
 # CORS (Frontend on Vercel)
 CORS_ALLOWED_ORIGINS = [
     "https://expense-splitter-fractal-manu-bharadwaj.vercel.app",
+    "http://localhost:3000",  # allow local frontend for testing
+]
+
+# Allow Vercel preview deploys (*.vercel.app)
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
 ]
 
 CORS_ALLOW_HEADERS = [
