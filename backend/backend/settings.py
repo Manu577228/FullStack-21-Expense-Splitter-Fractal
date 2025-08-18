@@ -24,6 +24,7 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
     "expense-splitter-fractal-manu-bharadwaj.onrender.com",
     "expense-splitter-fractal-13.onrender.com",  # Render live domain
+    "expense-splitter-fractal-14.onrender.com",  # Add new Render domain
 ]
 
 # Installed apps
@@ -80,13 +81,23 @@ TEMPLATES = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database (PostgreSQL for Render, fallback to SQLite locally)
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-        ssl_require=True  # Render PostgreSQL requires SSL
-    )
-}
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
