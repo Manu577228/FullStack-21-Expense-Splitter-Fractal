@@ -15,7 +15,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-this-in-prod")
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-prod")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
 # ✅ Correct Render backend domain
@@ -78,12 +78,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# Database (PostgreSQL for Render, SQLite fallback for local dev)
+# ✅ Database (PostgreSQL for Render, SQLite fallback for local dev)
 DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
-        ssl_require=False,  # Render free Postgres does not always enforce SSL
+        ssl_require=False,  # internal db on Render does not enforce SSL
     )
 }
 
@@ -100,7 +100,7 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static & Media
+# ✅ Static & Media files
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
@@ -110,7 +110,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# REST Framework + JWT
+# ✅ REST Framework + JWT
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
