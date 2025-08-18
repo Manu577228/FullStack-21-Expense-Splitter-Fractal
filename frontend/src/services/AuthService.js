@@ -1,5 +1,9 @@
 // src/services/AuthService.js
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8000/api/";
+const API_BASE =
+  process.env.REACT_APP_API_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "https://expense-splitter-fractal-13.onrender.com/api/"
+    : "http://localhost:8000/api/");
 
 // Login user
 export async function login(credentials) {
