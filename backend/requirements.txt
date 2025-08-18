@@ -17,5 +17,5 @@ tzdata==2025.2
 whitenoise==6.9.0
 
 # ✅ Needed for PostgreSQL & database config
-psycopg2-binary==2.9.9
+psycopg[binary]
 dj-database-url==2.2.0
