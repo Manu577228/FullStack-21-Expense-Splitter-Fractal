@@ -73,12 +73,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# Database (SQLite for dev, PostgreSQL for Render)
+# Database (PostgreSQL for Render, SQLite fallback for local dev)
 DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
-        ssl_require=False,
+        ssl_require=False,  # Render free Postgres does not always enforce SSL
     )
 }
 
@@ -120,7 +120,7 @@ SIMPLE_JWT = {
 
 # CORS (allow React frontend on Vercel)
 CORS_ALLOWED_ORIGINS = [
-    "https://your-frontend.vercel.app",  # replace with actual Vercel URL
+    "https://expense-splitter-fractal-manu-bharadwaj.vercel.app/groups",  # replace with actual Vercel URL
 ]
 CORS_ALLOW_HEADERS = [
     "content-type",
