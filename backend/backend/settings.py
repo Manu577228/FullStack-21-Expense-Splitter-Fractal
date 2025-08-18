@@ -40,9 +40,9 @@ INSTALLED_APPS = [
     "corsheaders",
 
     # Your apps
-    "users",
-    "expenses",
-    "groups",
+    "backend.users",
+    "backend.expenses",
+    "backend.groups",
 ]
 
 # Middleware
