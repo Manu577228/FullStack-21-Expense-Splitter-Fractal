@@ -4,7 +4,7 @@
 #  | _ ) |_  __ _ _ _ __ _ __| |_ __ ____ _ (_)
 #  | _ \ ' \/ _` | '_/ _` / _` \ V  V / _` || |
 #  |___/_||_\__,_|_| \__,_\__,_|\_/\_/\__,_|/ |
-#                                         |__/ 
+#                                         |__/
 # ----------------------------------------------------------------------------
 
 from pathlib import Path
@@ -18,7 +18,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-change-this-in-prod")
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", ".onrender.com"]
+# ✅ Correct Render backend domain
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "expense-splitter-fractal-manu-bharadwaj.onrender.com",
+]
 
 # Installed apps
 INSTALLED_APPS = [
@@ -118,10 +123,11 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# CORS (allow React frontend on Vercel)
+# ✅ CORS (Frontend on Vercel)
 CORS_ALLOWED_ORIGINS = [
-    "https://expense-splitter-fractal-manu-bharadwaj.vercel.app/groups",  # replace with actual Vercel URL
+    "https://expense-splitter-fractal-manu-bharadwaj.vercel.app",
 ]
+
 CORS_ALLOW_HEADERS = [
     "content-type",
     "authorization",
