@@ -1,4 +1,4 @@
-# 💸 Expense Splitter – Manage Shared Expenses with Ease
+# 💸 Expense Splitter – Manage Shared Expenses with Ease!
 
 The **Expense Splitter** is a web application that helps groups manage shared expenses effortlessly. Perfect for trips, roommates, or events, it ensures everyone knows who owes whom and how much.
 
