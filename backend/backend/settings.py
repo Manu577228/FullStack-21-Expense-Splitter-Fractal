@@ -10,24 +10,20 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-prod")
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = False
 
-# Correct Render backend domain
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "expense-splitter-fractal-manu-bharadwaj.onrender.com",
-    "expense-splitter-fractal-13.onrender.com",  # Render live domain
-    "expense-splitter-fractal-14.onrender.com",  # Add new Render domain
+    "ManuBharadwaj.pythonanywhere.com",
 ]
 
-# Installed apps
+# Applications
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,7 +37,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
 
-    # Your apps
+    # Local apps
     "users",
     "expenses",
     "groups",
@@ -51,7 +47,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -80,24 +75,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# Database (PostgreSQL for Render, fallback to SQLite locally)
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True
-        )
+# Database (SQLite ONLY for PythonAnywhere free)
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -113,17 +97,17 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static & media files
+# Static files
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# REST Framework + JWT
+# Django REST Framework + JWT
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -136,13 +120,13 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# CORS (Frontend on Vercel)
+# CORS
 CORS_ALLOWED_ORIGINS = [
     "https://expense-splitter-fractal-manu-bharadwaj.vercel.app",
-    "http://localhost:3000",  # allow local frontend for testing
+    "http://localhost:3000",
+    "https://ManuBharadwaj.pythonanywhere.com",
 ]
 
-# Allow Vercel preview deploys (*.vercel.app)
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.vercel\.app$",
 ]
