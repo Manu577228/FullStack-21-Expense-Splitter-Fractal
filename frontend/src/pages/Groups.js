@@ -17,7 +17,6 @@ import {
   Paper,
   Box,
   Button,
-  Divider,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -28,7 +27,6 @@ import {
   Card,
   CardContent,
   CardActions,
-  Avatar,
   Chip,
   IconButton,
   Stack,
@@ -37,7 +35,6 @@ import {
   Zoom,
   CardHeader,
   Tooltip,
-  ButtonGroup,
 } from "@mui/material";
 import {
   Group,
@@ -46,16 +43,123 @@ import {
   People,
   Analytics,
   DeleteOutline,
-  AttachMoney,
   TrendingUp,
-  Dashboard,
-  Settings,
   Share,
   MoreVert,
-  CheckCircle,
-  Error,
 } from "@mui/icons-material";
 import { apiFetch } from "../api";
+
+/* ---------- Design tokens (UI only) ---------- */
+const ui = {
+  ink: "#0B1020",
+  muted: "#64748B",
+  line: "rgba(15,23,42,0.08)",
+  teal: "#14B8A6",
+  coral: "#F43F5E",
+  aurora: "linear-gradient(135deg, #14B8A6 0%, #3B82F6 50%, #8B5CF6 100%)",
+};
+
+const accents = [
+  ["#14B8A6", "#3B82F6"],
+  ["#8B5CF6", "#EC4899"],
+  ["#F59E0B", "#F43F5E"],
+  ["#10B981", "#06B6D4"],
+  ["#6366F1", "#8B5CF6"],
+];
+
+const pageSx = {
+  position: "relative",
+  overflow: "hidden",
+  minHeight: "100vh",
+  backgroundColor: "#F8FAFC",
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: -160,
+    left: -120,
+    width: 520,
+    height: 520,
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(20,184,166,0.22), transparent 65%)",
+    pointerEvents: "none",
+  },
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    bottom: -180,
+    right: -140,
+    width: 560,
+    height: 560,
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(139,92,246,0.20), transparent 65%)",
+    pointerEvents: "none",
+  },
+};
+
+const cardSx = {
+  borderRadius: "28px",
+  backgroundColor: "rgba(255,255,255,0.88)",
+  backdropFilter: "blur(14px)",
+  border: `1px solid ${ui.line}`,
+  boxShadow: "0 30px 70px -30px rgba(59,130,246,0.35), 0 2px 8px rgba(15,23,42,0.04)",
+};
+
+const fieldSx = {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "16px",
+    backgroundColor: "rgba(241,245,249,0.75)",
+    fontWeight: 600,
+    transition: "all 0.2s ease",
+    "& fieldset": { borderColor: "transparent" },
+    "&:hover fieldset": { borderColor: "#5EEAD4" },
+    "&.Mui-focused": {
+      backgroundColor: "#fff",
+      boxShadow: "0 0 0 4px rgba(20,184,166,0.15)",
+    },
+    "&.Mui-focused fieldset": { borderColor: ui.teal, borderWidth: 2 },
+  },
+  "& .MuiInputLabel-root.Mui-focused": { color: "#0D9488" },
+};
+
+const iconTile = (size = 56, radius = "18px") => ({
+  width: size,
+  height: size,
+  borderRadius: radius,
+  display: "grid",
+  placeItems: "center",
+  color: "#fff",
+  background: ui.aurora,
+  boxShadow:
+    "0 14px 28px -10px rgba(99,102,241,0.7), inset 0 1px 0 rgba(255,255,255,0.35)",
+});
+
+const gradientBtn = {
+  borderRadius: "999px",
+  fontWeight: 800,
+  textTransform: "none",
+  color: "#fff",
+  background: ui.aurora,
+  backgroundSize: "200% 200%",
+  boxShadow: "0 22px 40px -16px rgba(99,102,241,0.85)",
+  transition: "all 0.3s ease",
+  "&:hover": {
+    backgroundPosition: "100% 50%",
+    transform: "translateY(-2px)",
+    boxShadow: "0 28px 46px -16px rgba(99,102,241,0.95)",
+  },
+  "&.Mui-disabled": {
+    background: "#E2E8F0",
+    color: "#94A3B8",
+    boxShadow: "none",
+  },
+};
+
+const alertBase = {
+  mb: 3,
+  borderRadius: "16px",
+  fontWeight: 600,
+  alignItems: "center",
+};
 
 export default function Groups() {
   const [groups, setGroups] = useState([]);
@@ -134,9 +238,7 @@ export default function Groups() {
     return (
       <Box
         sx={{
-          minHeight: "100vh",
-          background:
-            "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
+          ...pageSx,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -145,35 +247,26 @@ export default function Groups() {
       >
         <Fade in timeout={800}>
           <Paper
-            elevation={24}
+            elevation={0}
             sx={{
+              ...cardSx,
+              position: "relative",
+              zIndex: 1,
               p: { xs: 4, sm: 6 },
-              borderRadius: 3,
               textAlign: "center",
-              background: "#ffffff",
               maxWidth: 400,
               width: "100%",
-              border: "2px solid #000000",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
             }}
           >
             <CircularProgress
-              size={80}
-              thickness={2}
-              sx={{
-                color: "#000000",
-                mb: 4,
-              }}
+              size={72}
+              thickness={4}
+              sx={{ color: ui.teal, mb: 3 }}
             />
-            <Typography
-              variant="h5"
-              color="#000000"
-              fontWeight={700}
-              gutterBottom
-            >
+            <Typography variant="h5" color={ui.ink} fontWeight={800} gutterBottom>
               Loading Groups
             </Typography>
-            <Typography variant="body1" color="#666666">
+            <Typography variant="body1" color={ui.muted}>
               Please wait while we fetch your expense groups...
             </Typography>
           </Paper>
@@ -185,9 +278,7 @@ export default function Groups() {
     return (
       <Box
         sx={{
-          minHeight: "100vh",
-          background:
-            "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
+          ...pageSx,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -196,45 +287,33 @@ export default function Groups() {
       >
         <Zoom in timeout={1000}>
           <Paper
-            elevation={24}
+            elevation={0}
             sx={{
+              ...cardSx,
+              position: "relative",
+              zIndex: 1,
               p: { xs: 4, sm: 6 },
-              borderRadius: 3,
               textAlign: "center",
-              background: "#ffffff",
               maxWidth: 500,
               width: "100%",
-              border: "3px solid #000000",
-              boxShadow: "0 25px 80px rgba(0, 0, 0, 0.4)",
             }}
           >
-            <Box
-              sx={{
-                width: 100,
-                height: 100,
-                bgcolor: "#000000",
-                mx: "auto",
-                mb: 3,
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Login sx={{ fontSize: 50, color: "#ffffff" }} />
+            <Box sx={{ ...iconTile(92, "28px"), mx: "auto", mb: 3 }}>
+              <Login sx={{ fontSize: 46 }} />
             </Box>
             <Typography
               variant="h3"
-              fontWeight={900}
-              color="#000000"
+              fontWeight={800}
+              color={ui.ink}
               gutterBottom
+              sx={{ letterSpacing: "-1.5px" }}
             >
               Welcome Back!
             </Typography>
             <Typography
               variant="h6"
-              color="#666666"
-              sx={{ mb: 4, lineHeight: 1.6 }}
+              color={ui.muted}
+              sx={{ mb: 4, lineHeight: 1.6, fontWeight: 500, fontSize: "1.05rem" }}
             >
               Please login to access your expense groups and start tracking
               shared expenses with your friends.
@@ -242,26 +321,10 @@ export default function Groups() {
             <Button
               variant="contained"
               size="large"
+              disableElevation
               startIcon={<Login />}
               onClick={() => navigate("/login")}
-              sx={{
-                py: 2,
-                px: 6,
-                borderRadius: 0,
-                fontSize: "1.1rem",
-                fontWeight: 700,
-                background: "#000000",
-                color: "#ffffff",
-                border: "2px solid #000000",
-                "&:hover": {
-                  background: "#ffffff",
-                  color: "#000000",
-                  border: "2px solid #000000",
-                  transform: "translateY(-3px)",
-                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-                },
-                transition: "all 0.3s ease",
-              }}
+              sx={{ ...gradientBtn, py: 1.8, px: 5, fontSize: "1.05rem" }}
             >
               Login to Continue
             </Button>
@@ -271,127 +334,97 @@ export default function Groups() {
     );
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
-        py: { xs: 3, sm: 4 },
-      }}
-    >
-      <Container maxWidth="xl">
+    <Box sx={{ ...pageSx, py: { xs: 3, sm: 4 } }}>
+      <Container maxWidth="xl" sx={{ position: "relative", zIndex: 1, pb: 12 }}>
         {/* Header Section */}
         <Fade in timeout={800}>
-          <Paper
-            elevation={20}
+          <Box
             sx={{
-              p: { xs: 3, sm: 4, md: 5 },
-              borderRadius: 0,
-              mb: 4,
-              background: "#ffffff",
-              border: "3px solid #000000",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.2)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 3,
+              mb: 5,
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 3,
-              }}
-            >
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  variant="h2"
-                  sx={{
-                    fontWeight: 900,
-                    color: "#000000",
-                    mb: 1,
-                    fontSize: { xs: "2.5rem", sm: "3rem", md: "3.5rem" },
-                    textTransform: "uppercase",
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  My Groups
-                </Typography>
-                <Typography
-                  variant="h6"
-                  color="#666666"
-                  sx={{ fontWeight: 500, lineHeight: 1.6 }}
-                >
-                  Manage your expense groups and track spending effortlessly
-                </Typography>
-
-                {/* Stats Pills */}
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  sx={{ mt: 3, flexWrap: "wrap" }}
-                >
-                  <Chip
-                    icon={<Group sx={{ color: "#000000 !important" }} />}
-                    label={`${groups.length} Active Groups`}
-                    sx={{
-                      py: 2,
-                      px: 1,
-                      backgroundColor: "#f5f5f5",
-                      color: "#000000",
-                      border: "2px solid #000000",
-                      borderRadius: 0,
-                      "& .MuiChip-label": {
-                        fontSize: "0.9rem",
-                        fontWeight: 700,
-                      },
-                    }}
-                  />
-                  <Chip
-                    icon={<TrendingUp sx={{ color: "#000000 !important" }} />}
-                    label="Expense Tracking"
-                    sx={{
-                      py: 2,
-                      px: 1,
-                      backgroundColor: "#000000",
-                      color: "#ffffff",
-                      borderRadius: 0,
-                      "& .MuiChip-label": {
-                        fontSize: "0.9rem",
-                        fontWeight: 700,
-                      },
-                    }}
-                  />
-                </Stack>
-              </Box>
-
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<Add />}
-                onClick={() => setOpenDialog(true)}
+            <Box sx={{ flex: 1 }}>
+              <Typography
+                variant="h2"
                 sx={{
-                  py: 2.5,
-                  px: 5,
-                  borderRadius: 0,
-                  fontSize: "1.1rem",
-                  fontWeight: 700,
-                  background: "#000000",
-                  color: "#ffffff",
-                  border: "2px solid #000000",
-                  "&:hover": {
-                    background: "#ffffff",
-                    color: "#000000",
-                    border: "2px solid #000000",
-                    transform: "translateY(-3px)",
-                    boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-                  },
-                  transition: "all 0.3s ease",
+                  fontWeight: 800,
+                  color: ui.ink,
+                  mb: 1,
+                  fontSize: { xs: "2.4rem", sm: "3rem", md: "3.6rem" },
+                  letterSpacing: "-2px",
+                  lineHeight: 1.05,
                 }}
               >
-                Create New Group
-              </Button>
+                My{" "}
+                <Box
+                  component="span"
+                  sx={{
+                    background: ui.aurora,
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  Groups
+                </Box>
+              </Typography>
+              <Typography
+                variant="h6"
+                color={ui.muted}
+                sx={{ fontWeight: 500, lineHeight: 1.6, fontSize: "1.05rem" }}
+              >
+                Manage your expense groups and track spending effortlessly
+              </Typography>
+
+              {/* Stats Pills */}
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{ mt: 3, flexWrap: "wrap", rowGap: 1.5 }}
+              >
+                <Chip
+                  icon={<Group sx={{ color: "#0F766E !important" }} />}
+                  label={`${groups.length} Active Groups`}
+                  sx={{
+                    height: 38,
+                    px: 0.5,
+                    backgroundColor: "rgba(20,184,166,0.12)",
+                    color: "#0F766E",
+                    borderRadius: "999px",
+                    "& .MuiChip-label": { fontSize: "0.9rem", fontWeight: 700 },
+                  }}
+                />
+                <Chip
+                  icon={<TrendingUp sx={{ color: "#fff !important" }} />}
+                  label="Expense Tracking"
+                  sx={{
+                    height: 38,
+                    px: 0.5,
+                    backgroundColor: ui.ink,
+                    color: "#fff",
+                    borderRadius: "999px",
+                    "& .MuiChip-label": { fontSize: "0.9rem", fontWeight: 700 },
+                  }}
+                />
+              </Stack>
             </Box>
-          </Paper>
+
+            <Button
+              variant="contained"
+              size="large"
+              disableElevation
+              startIcon={<Add />}
+              onClick={() => setOpenDialog(true)}
+              sx={{ ...gradientBtn, py: 1.9, px: 4.5, fontSize: "1.05rem" }}
+            >
+              Create New Group
+            </Button>
+          </Box>
         </Fade>
 
         {/* Alert Messages */}
@@ -400,14 +433,11 @@ export default function Groups() {
             <Alert
               severity="error"
               sx={{
-                mb: 3,
-                borderRadius: 0,
-                backgroundColor: "#ffffff",
-                color: "#000000",
-                border: "2px solid #000000",
-                "& .MuiAlert-icon": { color: "#000000" },
-                fontSize: "1rem",
-                fontWeight: 600,
+                ...alertBase,
+                backgroundColor: "#FFF1F2",
+                color: "#9F1239",
+                border: "1px solid rgba(244,63,94,0.3)",
+                "& .MuiAlert-icon": { color: ui.coral },
               }}
               onClose={() => setError("")}
             >
@@ -421,14 +451,11 @@ export default function Groups() {
             <Alert
               severity="success"
               sx={{
-                mb: 3,
-                borderRadius: 0,
-                backgroundColor: "#000000",
-                color: "#ffffff",
-                border: "2px solid #000000",
-                "& .MuiAlert-icon": { color: "#ffffff" },
-                fontSize: "1rem",
-                fontWeight: 600,
+                ...alertBase,
+                backgroundColor: "#ECFDF5",
+                color: "#065F46",
+                border: "1px solid rgba(16,185,129,0.35)",
+                "& .MuiAlert-icon": { color: "#10B981" },
               }}
               onClose={() => setSuccess("")}
             >
@@ -441,45 +468,44 @@ export default function Groups() {
         {groups.length === 0 ? (
           <Zoom in timeout={1000}>
             <Paper
-              elevation={20}
+              elevation={0}
               sx={{
+                ...cardSx,
                 p: { xs: 6, sm: 8, md: 10 },
-                borderRadius: 0,
                 textAlign: "center",
-                background: "#ffffff",
-                border: "3px solid #000000",
-                boxShadow: "0 25px 80px rgba(0, 0, 0, 0.3)",
               }}
             >
               <Box
                 sx={{
-                  width: { xs: 120, sm: 150 },
-                  height: { xs: 120, sm: 150 },
+                  ...iconTile(130, "40px"),
                   mx: "auto",
                   mb: 4,
-                  backgroundColor: "#000000",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: "50%",
+                  width: { xs: 110, sm: 130 },
+                  height: { xs: 110, sm: 130 },
                 }}
               >
-                <Group
-                  sx={{ fontSize: { xs: 60, sm: 80 }, color: "#ffffff" }}
-                />
+                <Group sx={{ fontSize: { xs: 54, sm: 66 } }} />
               </Box>
               <Typography
                 variant="h3"
-                fontWeight={900}
-                color="#000000"
+                fontWeight={800}
+                color={ui.ink}
                 gutterBottom
+                sx={{ letterSpacing: "-1.5px" }}
               >
                 No Groups Yet
               </Typography>
               <Typography
                 variant="h6"
-                color="#666666"
-                sx={{ mb: 6, maxWidth: 500, mx: "auto", lineHeight: 1.6 }}
+                color={ui.muted}
+                sx={{
+                  mb: 5,
+                  maxWidth: 500,
+                  mx: "auto",
+                  lineHeight: 1.6,
+                  fontWeight: 500,
+                  fontSize: "1.05rem",
+                }}
               >
                 Create your first expense group to start splitting bills with
                 friends, family, or colleagues. It's quick and easy!
@@ -487,254 +513,279 @@ export default function Groups() {
               <Button
                 variant="contained"
                 size="large"
+                disableElevation
                 startIcon={<Add />}
                 onClick={() => setOpenDialog(true)}
-                sx={{
-                  py: 3,
-                  px: 6,
-                  borderRadius: 0,
-                  fontSize: "1.2rem",
-                  fontWeight: 700,
-                  background: "#000000",
-                  color: "#ffffff",
-                  border: "2px solid #000000",
-                  "&:hover": {
-                    background: "#ffffff",
-                    color: "#000000",
-                    border: "2px solid #000000",
-                    transform: "translateY(-3px)",
-                    boxShadow: "0 15px 40px rgba(0, 0, 0, 0.4)",
-                  },
-                  transition: "all 0.3s ease",
-                }}
+                sx={{ ...gradientBtn, py: 2, px: 5, fontSize: "1.1rem" }}
               >
                 Create Your First Group
               </Button>
             </Paper>
           </Zoom>
         ) : (
-          <Grid container spacing={4}>
-            {groups.map((group, index) => (
-              <Grid item xs={12} sm={6} lg={4} xl={3} key={group.id}>
-                <Zoom in timeout={800 + index * 200}>
-                  <Card
-                    elevation={16}
-                    sx={{
-                      borderRadius: 0,
-                      background: "#ffffff",
-                      border: "2px solid #000000",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-8px)",
-                        boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
-                      },
-                      cursor: "pointer",
-                    }}
-                  >
-                    <CardHeader
-                      avatar={
-                        <Box
-                          sx={{
-                            width: 64,
-                            height: 64,
-                            backgroundColor:
-                              index % 2 === 0 ? "#000000" : "#ffffff",
-                            border: "2px solid #000000",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: "50%",
-                          }}
-                        >
-                          <Group
+          <Grid container spacing={3.5}>
+            {groups.map((group, index) => {
+              const [from, to] = accents[index % accents.length];
+              return (
+                <Grid item xs={12} sm={6} lg={4} xl={3} key={group.id}>
+                  <Zoom in timeout={800 + index * 200}>
+                    <Card
+                      elevation={0}
+                      sx={{
+                        ...cardSx,
+                        position: "relative",
+                        overflow: "hidden",
+                        transition: "all 0.3s ease",
+                        "&::before": {
+                          content: '""',
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: 5,
+                          background: `linear-gradient(90deg, ${from}, ${to})`,
+                        },
+                        "&:hover": {
+                          transform: "translateY(-8px)",
+                          boxShadow: `0 40px 70px -30px ${to}`,
+                        },
+                      }}
+                    >
+                      <CardHeader
+                        sx={{ pt: 3 }}
+                        avatar={
+                          <Box
                             sx={{
-                              fontSize: 30,
-                              color: index % 2 === 0 ? "#ffffff" : "#000000",
+                              ...iconTile(60, "20px"),
+                              background: `linear-gradient(135deg, ${from}, ${to})`,
+                              boxShadow: `0 16px 28px -12px ${to}`,
                             }}
-                          />
-                        </Box>
-                      }
-                      title={
-                        <Typography
-                          variant="h5"
-                          fontWeight={800}
-                          color="#000000"
-                        >
-                          {group.name}
-                        </Typography>
-                      }
-                      subheader={
-                        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                          <Chip
-                            label="Active"
-                            size="small"
-                            sx={{
-                              backgroundColor: "#000000",
-                              color: "#ffffff",
-                              fontWeight: 700,
-                              borderRadius: 0,
-                            }}
-                          />
-                          <Chip
-                            label="Shared"
-                            size="small"
-                            sx={{
-                              backgroundColor: "#ffffff",
-                              color: "#000000",
-                              border: "1px solid #000000",
-                              fontWeight: 700,
-                              borderRadius: 0,
-                            }}
-                          />
-                        </Stack>
-                      }
-                      action={
-                        <IconButton sx={{ color: "#000000" }}>
-                          <MoreVert />
-                        </IconButton>
-                      }
-                    />
-
-                    <CardContent sx={{ pt: 0 }}>
-                      <Box
-                        sx={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
-                          gap: 2,
-                          mb: 2,
-                          p: 2,
-                          bgcolor: "#f8f8f8",
-                          border: "1px solid #e0e0e0",
-                        }}
-                      >
-                        <Box sx={{ textAlign: "center" }}>
+                          >
+                            <Group sx={{ fontSize: 30 }} />
+                          </Box>
+                        }
+                        title={
                           <Typography
-                            variant="h4"
-                            fontWeight={900}
-                            color="#000000"
+                            variant="h5"
+                            fontWeight={800}
+                            color={ui.ink}
+                            sx={{ letterSpacing: "-0.6px" }}
                           >
-                            {group.member_count || 0}
+                            {group.name}
                           </Typography>
-                          <Typography
-                            variant="body2"
-                            color="#666666"
-                            fontWeight={700}
-                          >
-                            Members
-                          </Typography>
-                        </Box>
-                        <Box sx={{ textAlign: "center" }}>
-                          <Typography
-                            variant="h4"
-                            fontWeight={900}
-                            color="#000000"
-                          >
-                            ₹{group.total_expenses || 0}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            color="#666666"
-                            fontWeight={700}
-                          >
-                            Total Spent
-                          </Typography>
-                        </Box>
-                      </Box>
-
-                      <Typography
-                        variant="body2"
-                        color="#666666"
-                        sx={{ mb: 2, lineHeight: 1.6, fontWeight: 500 }}
-                      >
-                        Track and split expenses seamlessly with your group
-                        members.
-                      </Typography>
-                    </CardContent>
-
-                    <CardActions sx={{ p: 3, pt: 0 }}>
-                      <Stack direction="column" spacing={2} width="100%">
-                        <ButtonGroup variant="outlined" fullWidth>
-                          <Button
-                            startIcon={<People />}
-                            onClick={() =>
-                              navigate(`/groups/${group.id}/add-members`)
-                            }
-                            sx={{
-                              borderColor: "#000000",
-                              color: "#000000",
-                              fontWeight: 700,
-                              "&:hover": {
-                                backgroundColor: "#000000",
-                                color: "#ffffff",
-                                borderColor: "#000000",
-                              },
-                            }}
-                          >
-                            Members
-                          </Button>
-                          <Button
-                            startIcon={<Analytics />}
-                            onClick={() => navigate(`/summary/${group.id}`)}
-                            sx={{
-                              borderColor: "#000000",
-                              color: "#000000",
-                              fontWeight: 700,
-                              "&:hover": {
-                                backgroundColor: "#000000",
-                                color: "#ffffff",
-                                borderColor: "#000000",
-                              },
-                            }}
-                          >
-                            Summary
-                          </Button>
-                        </ButtonGroup>
-
-                        <Box
-                          sx={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Button
-                            variant="text"
-                            startIcon={<Share />}
-                            size="small"
-                            sx={{
-                              fontWeight: 700,
-                              color: "#000000",
-                              "&:hover": {
-                                backgroundColor: "#f5f5f5",
-                              },
-                            }}
-                          >
-                            Share Group
-                          </Button>
-                          <Tooltip title="Delete Group">
-                            <IconButton
-                              onClick={() => handleDeleteGroup(group.id)}
+                        }
+                        subheader={
+                          <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                            <Chip
+                              label="Active"
+                              size="small"
                               sx={{
-                                color: "#000000",
-                                border: "1px solid #000000",
-                                "&:hover": {
-                                  backgroundColor: "#000000",
-                                  color: "#ffffff",
-                                  transform: "scale(1.1)",
-                                },
-                                transition: "all 0.2s ease",
+                                backgroundColor: "#ECFDF5",
+                                color: "#047857",
+                                fontWeight: 700,
+                              }}
+                            />
+                            <Chip
+                              label="Shared"
+                              size="small"
+                              sx={{
+                                backgroundColor: "#EFF6FF",
+                                color: "#1D4ED8",
+                                fontWeight: 700,
+                              }}
+                            />
+                          </Stack>
+                        }
+                        action={
+                          <IconButton
+                            sx={{
+                              color: ui.muted,
+                              "&:hover": { backgroundColor: "rgba(15,23,42,0.06)" },
+                            }}
+                          >
+                            <MoreVert />
+                          </IconButton>
+                        }
+                      />
+
+                      <CardContent sx={{ pt: 0 }}>
+                        <Box
+                          sx={{
+                            display: "grid",
+                            gridTemplateColumns: "1fr 1fr",
+                            gap: 1.5,
+                            mb: 2,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              textAlign: "center",
+                              p: 2,
+                              borderRadius: "18px",
+                              backgroundColor: "rgba(241,245,249,0.8)",
+                            }}
+                          >
+                            <Typography
+                              variant="h4"
+                              fontWeight={800}
+                              color={ui.ink}
+                              sx={{ letterSpacing: "-1px" }}
+                            >
+                              {group.member_count || 0}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color={ui.muted}
+                              fontWeight={700}
+                            >
+                              Members
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              textAlign: "center",
+                              p: 2,
+                              borderRadius: "18px",
+                              backgroundColor: "rgba(241,245,249,0.8)",
+                            }}
+                          >
+                            <Typography
+                              variant="h4"
+                              fontWeight={800}
+                              sx={{
+                                letterSpacing: "-1px",
+                                background: `linear-gradient(135deg, ${from}, ${to})`,
+                                WebkitBackgroundClip: "text",
+                                backgroundClip: "text",
+                                WebkitTextFillColor: "transparent",
                               }}
                             >
-                              <DeleteOutline />
-                            </IconButton>
-                          </Tooltip>
+                              ₹{group.total_expenses || 0}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color={ui.muted}
+                              fontWeight={700}
+                            >
+                              Total Spent
+                            </Typography>
+                          </Box>
                         </Box>
-                      </Stack>
-                    </CardActions>
-                  </Card>
-                </Zoom>
-              </Grid>
-            ))}
+
+                        <Typography
+                          variant="body2"
+                          color={ui.muted}
+                          sx={{ mb: 1, lineHeight: 1.6, fontWeight: 500 }}
+                        >
+                          Track and split expenses seamlessly with your group
+                          members.
+                        </Typography>
+                      </CardContent>
+
+                      <CardActions sx={{ p: 3, pt: 0 }}>
+                        <Stack direction="column" spacing={2} width="100%">
+                          <Box
+                            sx={{
+                              display: "grid",
+                              gridTemplateColumns: "1fr 1fr",
+                              gap: 1.25,
+                            }}
+                          >
+                            <Button
+                              startIcon={<People />}
+                              onClick={() =>
+                                navigate(`/groups/${group.id}/add-members`)
+                              }
+                              sx={{
+                                py: 1.2,
+                                borderRadius: "999px",
+                                fontWeight: 700,
+                                textTransform: "none",
+                                color: ui.ink,
+                                border: "1.5px solid rgba(15,23,42,0.15)",
+                                transition: "all 0.25s ease",
+                                "&:hover": {
+                                  background: ui.ink,
+                                  color: "#fff",
+                                  borderColor: ui.ink,
+                                  transform: "translateY(-2px)",
+                                },
+                              }}
+                            >
+                              Members
+                            </Button>
+                            <Button
+                              startIcon={<Analytics />}
+                              onClick={() => navigate(`/summary/${group.id}`)}
+                              sx={{
+                                py: 1.2,
+                                borderRadius: "999px",
+                                fontWeight: 700,
+                                textTransform: "none",
+                                color: "#fff",
+                                background: `linear-gradient(135deg, ${from}, ${to})`,
+                                boxShadow: `0 14px 26px -12px ${to}`,
+                                transition: "all 0.25s ease",
+                                "&:hover": {
+                                  filter: "brightness(1.08)",
+                                  transform: "translateY(-2px)",
+                                },
+                              }}
+                            >
+                              Summary
+                            </Button>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Button
+                              variant="text"
+                              startIcon={<Share />}
+                              size="small"
+                              sx={{
+                                fontWeight: 700,
+                                textTransform: "none",
+                                color: ui.muted,
+                                borderRadius: "999px",
+                                px: 1.5,
+                                "&:hover": {
+                                  backgroundColor: "rgba(20,184,166,0.12)",
+                                  color: "#0F766E",
+                                },
+                              }}
+                            >
+                              Share Group
+                            </Button>
+                            <Tooltip title="Delete Group">
+                              <IconButton
+                                onClick={() => handleDeleteGroup(group.id)}
+                                sx={{
+                                  color: ui.coral,
+                                  backgroundColor: "rgba(244,63,94,0.10)",
+                                  transition: "all 0.2s ease",
+                                  "&:hover": {
+                                    backgroundColor: ui.coral,
+                                    color: "#fff",
+                                    transform: "scale(1.1)",
+                                  },
+                                }}
+                              >
+                                <DeleteOutline />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </Stack>
+                      </CardActions>
+                    </Card>
+                  </Zoom>
+                </Grid>
+              );
+            })}
           </Grid>
         )}
 
@@ -744,40 +795,35 @@ export default function Groups() {
           onClose={() => setOpenDialog(false)}
           fullWidth
           maxWidth="sm"
+          BackdropProps={{
+            sx: {
+              backgroundColor: "rgba(11,16,32,0.35)",
+              backdropFilter: "blur(6px)",
+            },
+          }}
           PaperProps={{
             sx: {
-              borderRadius: 0,
-              background: "#ffffff",
-              border: "3px solid #000000",
-              boxShadow: "0 25px 80px rgba(0, 0, 0, 0.4)",
+              borderRadius: "28px",
+              background: "#fff",
+              border: `1px solid ${ui.line}`,
+              boxShadow: "0 40px 90px -30px rgba(59,130,246,0.55)",
             },
           }}
         >
-          <DialogTitle sx={{ pb: 2, textAlign: "center" }}>
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                mx: "auto",
-                mb: 2,
-                backgroundColor: "#000000",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Add sx={{ fontSize: 40, color: "#ffffff" }} />
+          <DialogTitle sx={{ pb: 2, pt: 4, textAlign: "center" }}>
+            <Box sx={{ ...iconTile(76, "24px"), mx: "auto", mb: 2 }}>
+              <Add sx={{ fontSize: 38 }} />
             </Box>
             <Typography
               variant="h4"
-              fontWeight={900}
-              color="#000000"
+              fontWeight={800}
+              color={ui.ink}
               gutterBottom
+              sx={{ letterSpacing: "-1px" }}
             >
               Create New Group
             </Typography>
-            <Typography variant="body1" color="#666666" fontWeight={500}>
+            <Typography variant="body1" color={ui.muted} fontWeight={500}>
               Start tracking expenses with your friends and family
             </Typography>
           </DialogTitle>
@@ -792,79 +838,33 @@ export default function Groups() {
               variant="outlined"
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: 0,
-                  fontSize: "1.1rem",
-                  py: 1,
-                  "& fieldset": {
-                    borderColor: "#000000",
-                    borderWidth: "2px",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "#000000",
-                    borderWidth: "2px",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#000000",
-                    borderWidth: "2px",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  fontSize: "1.1rem",
-                  fontWeight: 700,
-                  color: "#000000",
-                  "&.Mui-focused": {
-                    color: "#000000",
-                  },
-                },
-              }}
+              sx={fieldSx}
               onKeyPress={(e) => e.key === "Enter" && handleCreateGroup()}
             />
           </DialogContent>
 
-          <DialogActions sx={{ p: 3, gap: 2 }}>
+          <DialogActions sx={{ p: 3, gap: 1.5 }}>
             <Button
               onClick={() => setOpenDialog(false)}
               sx={{
-                borderRadius: 0,
-                px: 3,
-                py: 1.5,
+                borderRadius: "999px",
+                px: 3.5,
+                py: 1.4,
                 fontWeight: 700,
-                fontSize: "1rem",
-                color: "#000000",
-                border: "2px solid #000000",
-                "&:hover": {
-                  backgroundColor: "#f5f5f5",
-                },
+                textTransform: "none",
+                color: ui.ink,
+                border: "1.5px solid rgba(15,23,42,0.15)",
+                "&:hover": { backgroundColor: "rgba(15,23,42,0.06)" },
               }}
             >
               Cancel
             </Button>
             <Button
               variant="contained"
+              disableElevation
               onClick={handleCreateGroup}
               disabled={!newGroupName.trim()}
-              sx={{
-                borderRadius: 0,
-                px: 4,
-                py: 1.5,
-                fontWeight: 700,
-                fontSize: "1rem",
-                background: "#000000",
-                color: "#ffffff",
-                border: "2px solid #000000",
-                "&:hover": {
-                  background: "#ffffff",
-                  color: "#000000",
-                  border: "2px solid #000000",
-                },
-                "&:disabled": {
-                  background: "#cccccc",
-                  color: "#666666",
-                  border: "2px solid #cccccc",
-                },
-              }}
+              sx={{ ...gradientBtn, px: 4, py: 1.4, fontSize: "1rem" }}
             >
               Create Group
             </Button>

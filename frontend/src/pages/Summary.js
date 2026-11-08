@@ -15,18 +15,20 @@ import {
   Typography,
   Paper,
   Box,
-  Divider,
   Button,
   Alert,
   CircularProgress,
   Card,
   CardContent,
+  CardHeader,
   Grid,
   Stack,
   Chip,
   IconButton,
+  Avatar,
   Fade,
   Slide,
+  Zoom,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -37,8 +39,96 @@ import {
   AddCircle,
   Group,
   Receipt,
+  Error as ErrorIcon,
 } from "@mui/icons-material";
 import { apiFetch } from "../api";
+
+/* ---------- Design tokens (UI only) ---------- */
+const ui = {
+  ink: "#0B1020",
+  muted: "#64748B",
+  line: "rgba(15,23,42,0.08)",
+  teal: "#14B8A6",
+  positive: "#047857",
+  negative: "#BE123C",
+  aurora: "linear-gradient(135deg, #14B8A6 0%, #3B82F6 50%, #8B5CF6 100%)",
+};
+
+const accents = [
+  ["#14B8A6", "#3B82F6"],
+  ["#8B5CF6", "#EC4899"],
+  ["#F59E0B", "#F43F5E"],
+  ["#10B981", "#06B6D4"],
+  ["#6366F1", "#8B5CF6"],
+];
+
+const pageSx = {
+  position: "relative",
+  overflow: "hidden",
+  minHeight: "100vh",
+  backgroundColor: "#F8FAFC",
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    top: -160,
+    left: -120,
+    width: 520,
+    height: 520,
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(20,184,166,0.22), transparent 65%)",
+    pointerEvents: "none",
+  },
+  "&::after": {
+    content: '""',
+    position: "absolute",
+    bottom: -180,
+    right: -140,
+    width: 560,
+    height: 560,
+    borderRadius: "50%",
+    background: "radial-gradient(circle, rgba(139,92,246,0.20), transparent 65%)",
+    pointerEvents: "none",
+  },
+};
+
+const cardSx = {
+  borderRadius: "28px",
+  backgroundColor: "rgba(255,255,255,0.88)",
+  backdropFilter: "blur(14px)",
+  border: `1px solid ${ui.line}`,
+  boxShadow: "0 30px 70px -30px rgba(59,130,246,0.35), 0 2px 8px rgba(15,23,42,0.04)",
+};
+
+const iconTile = (size = 48) => ({
+  width: size,
+  height: size,
+  borderRadius: "16px",
+  display: "grid",
+  placeItems: "center",
+  color: "#fff",
+  background: ui.aurora,
+  boxShadow:
+    "0 12px 24px -10px rgba(99,102,241,0.7), inset 0 1px 0 rgba(255,255,255,0.35)",
+});
+
+const ghostBtn = {
+  py: 1.6,
+  px: 3.5,
+  borderRadius: "999px",
+  fontWeight: 700,
+  textTransform: "none",
+  color: ui.ink,
+  border: "1.5px solid rgba(15,23,42,0.15)",
+  backgroundColor: "rgba(255,255,255,0.7)",
+  transition: "all 0.25s ease",
+  "&:hover": {
+    background: ui.ink,
+    color: "#fff",
+    borderColor: ui.ink,
+    transform: "translateY(-2px)",
+    boxShadow: "0 16px 28px -14px rgba(11,16,32,0.7)",
+  },
+};
 
 export default function Summary() {
   const { groupId } = useParams();
@@ -51,6 +141,7 @@ export default function Summary() {
 
   useEffect(() => {
     loadSummary();
+    // eslint-disable-next-line
   }, [groupId]);
 
   const loadSummary = async () => {
@@ -69,13 +160,12 @@ export default function Summary() {
     }
   };
 
+  /* ---------- Loading ---------- */
   if (loading)
     return (
       <Box
         sx={{
-          minHeight: "100vh",
-          background:
-            "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
+          ...pageSx,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -84,35 +174,24 @@ export default function Summary() {
       >
         <Fade in timeout={800}>
           <Paper
-            elevation={24}
+            elevation={0}
             sx={{
+              ...cardSx,
+              position: "relative",
+              zIndex: 1,
               p: { xs: 4, sm: 6 },
-              borderRadius: 0,
               textAlign: "center",
-              background: "#ffffff",
               maxWidth: 400,
               width: "100%",
-              border: "3px solid #000000",
-              boxShadow: "0 25px 80px rgba(0, 0, 0, 0.4)",
             }}
           >
-            <CircularProgress
-              size={80}
-              thickness={2}
-              sx={{
-                color: "#000000",
-                mb: 4,
-              }}
-            />
-            <Typography
-              variant="h5"
-              color="#000000"
-              fontWeight={700}
-              gutterBottom
-            >
+            <Box sx={{ mb: 3 }}>
+              <CircularProgress size={72} thickness={4} sx={{ color: ui.teal }} />
+            </Box>
+            <Typography variant="h5" color={ui.ink} fontWeight={800} gutterBottom>
               Loading Summary
             </Typography>
-            <Typography variant="body1" color="#666666">
+            <Typography variant="body1" sx={{ color: ui.muted }}>
               Please wait while we calculate the expenses...
             </Typography>
           </Paper>
@@ -120,394 +199,396 @@ export default function Summary() {
       </Box>
     );
 
+  /* ---------- Error ---------- */
   if (error)
     return (
       <Box
         sx={{
-          minHeight: "100vh",
-          background:
-            "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
+          ...pageSx,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           p: { xs: 2, sm: 3 },
         }}
       >
-        <Paper
-          sx={{
-            p: 4,
-            background: "#ffffff",
-            border: "3px solid #000000",
-            borderRadius: 0,
-            maxWidth: 500,
-            width: "100%",
-          }}
-        >
-          <Alert
-            severity="error"
+        <Zoom in timeout={800}>
+          <Paper
+            elevation={0}
             sx={{
-              mb: 3,
-              backgroundColor: "#ffffff",
-              color: "#000000",
-              border: "2px solid #000000",
-              borderRadius: 0,
-              "& .MuiAlert-icon": { color: "#000000" },
-              fontWeight: 600,
+              ...cardSx,
+              position: "relative",
+              zIndex: 1,
+              p: { xs: 4, sm: 5 },
+              textAlign: "center",
+              maxWidth: 500,
+              width: "100%",
             }}
           >
-            {error}
-          </Alert>
-          <Button
-            onClick={() => navigate("/groups")}
-            sx={{
-              background: "#000000",
-              color: "#ffffff",
-              border: "2px solid #000000",
-              borderRadius: 0,
-              fontWeight: 700,
-              "&:hover": {
-                background: "#ffffff",
-                color: "#000000",
-                border: "2px solid #000000",
-              },
-            }}
-          >
-            Back to Groups
-          </Button>
-        </Paper>
+            <Avatar
+              sx={{
+                width: 88,
+                height: 88,
+                mx: "auto",
+                mb: 3,
+                color: "#fff",
+                background: "linear-gradient(135deg, #F43F5E, #F59E0B)",
+                boxShadow: "0 20px 40px -16px rgba(244,63,94,0.7)",
+              }}
+            >
+              <ErrorIcon sx={{ fontSize: 44 }} />
+            </Avatar>
+            <Alert
+              variant="outlined"
+              severity="error"
+              icon={<ErrorIcon />}
+              sx={{
+                mb: 3,
+                borderRadius: "16px",
+                fontWeight: 600,
+                alignItems: "center",
+                textAlign: "left",
+                color: "#9F1239",
+                backgroundColor: "#FFF1F2",
+                borderColor: "rgba(244,63,94,0.3)",
+                "& .MuiAlert-icon": { color: "#F43F5E" },
+              }}
+            >
+              {error}
+            </Alert>
+            <Button
+              variant="contained"
+              disableElevation
+              onClick={() => navigate("/groups")}
+              sx={{
+                py: 1.6,
+                px: 4,
+                borderRadius: "999px",
+                fontWeight: 700,
+                textTransform: "none",
+                background: ui.ink,
+                color: "#fff",
+                boxShadow: "0 16px 30px -14px rgba(11,16,32,0.7)",
+                "&:hover": { background: ui.aurora, transform: "translateY(-2px)" },
+              }}
+            >
+              Back to Groups
+            </Button>
+          </Paper>
+        </Zoom>
       </Box>
     );
 
+  const balances = summaryData?.member_balances || [];
+
+  /* ---------- Main ---------- */
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        background:
-          "linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #000000 100%)",
-        py: { xs: 3, sm: 4 },
-      }}
-    >
-      <Container maxWidth="md" sx={{ pb: 10 }}>
-        {/* Header Section */}
+    <Box sx={{ ...pageSx, py: { xs: 3, sm: 4 } }}>
+      <Container maxWidth="md" sx={{ position: "relative", zIndex: 1, pb: 12 }}>
+        {/* Header */}
         <Fade in timeout={800}>
-          <Paper
-            elevation={20}
+          <Box
             sx={{
-              p: { xs: 3, sm: 4 },
-              borderRadius: 0,
+              display: "flex",
+              alignItems: "center",
               mb: 4,
-              background: "#ffffff",
-              border: "3px solid #000000",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+              flexWrap: "wrap",
+              gap: 2,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <IconButton
-                onClick={() => navigate(`/groups/${groupId}/add-members`)}
+            <IconButton
+              aria-label="Back to members"
+              onClick={() => navigate(`/groups/${groupId}/add-members`)}
+              sx={{
+                mr: 1,
+                background: ui.ink,
+                color: "#fff",
+                boxShadow: "0 14px 26px -10px rgba(11,16,32,0.6)",
+                transition: "all 0.3s ease",
+                "&:hover": { background: ui.aurora, transform: "translateX(-3px)" },
+              }}
+            >
+              <ArrowBack />
+            </IconButton>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                variant="h3"
                 sx={{
-                  mr: 2,
-                  background: "#000000",
-                  color: "#ffffff",
-                  border: "2px solid #000000",
-                  "&:hover": {
-                    background: "#ffffff",
-                    color: "#000000",
-                    border: "2px solid #000000",
-                    transform: "scale(1.1)",
-                  },
-                  transition: "all 0.3s ease",
+                  fontWeight: 800,
+                  color: ui.ink,
+                  letterSpacing: "-1.5px",
+                  lineHeight: 1.1,
+                  fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
                 }}
               >
-                <ArrowBack />
-              </IconButton>
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  variant="h3"
-                  sx={{
-                    fontWeight: 900,
-                    color: "#000000",
-                    textTransform: "uppercase",
-                    letterSpacing: "-0.02em",
-                    fontSize: { xs: "2rem", sm: "2.5rem" },
-                  }}
-                >
-                  Expense Summary
-                </Typography>
-                <Typography variant="h6" color="#666666" fontWeight={600}>
-                  {group?.name} • Financial Overview
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  background: "#000000",
-                  color: "#ffffff",
-                  p: 2,
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+                Expense Summary
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{ color: ui.muted, fontWeight: 600, mt: 0.5, fontSize: "1.05rem" }}
               >
-                <Analytics sx={{ fontSize: 32 }} />
-              </Box>
+                {group?.name} • Financial overview
+              </Typography>
             </Box>
-          </Paper>
+            <Box sx={iconTile(52)}>
+              <Analytics sx={{ fontSize: 26 }} />
+            </Box>
+          </Box>
         </Fade>
 
-        {/* Total Amount Card */}
-        <Slide direction="up" in timeout={1000}>
-          <Paper
+        {/* Total amount */}
+        <Slide direction="up" in timeout={900}>
+          <Box
             sx={{
-              p: 4,
+              position: "relative",
+              overflow: "hidden",
+              p: { xs: 3, sm: 4 },
               mb: 4,
-              borderRadius: 0,
-              background: "#000000",
-              color: "#ffffff",
-              border: "3px solid #000000",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.4)",
+              borderRadius: "28px",
+              color: "#fff",
+              background: ui.ink,
+              boxShadow: "0 24px 44px -22px rgba(11,16,32,0.8)",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                right: -60,
+                top: -60,
+                width: 260,
+                height: 260,
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(circle, rgba(59,130,246,0.55), transparent 65%)",
+                pointerEvents: "none",
+              },
             }}
           >
             <Box
               sx={{
+                position: "relative",
+                zIndex: 1,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                mb: 2,
+                gap: 3,
+                flexWrap: "wrap",
               }}
             >
-              <AccountBalance sx={{ fontSize: 48, mr: 2 }} />
-              <Box sx={{ textAlign: "center" }}>
-                <Typography
-                  variant="h6"
-                  fontWeight={700}
-                  sx={{ mb: 1, textTransform: "uppercase" }}
-                >
-                  Total Group Expenses
+              <Box sx={iconTile(64)}>
+                <AccountBalance sx={{ fontSize: 32 }} />
+              </Box>
+              <Box>
+                <Typography variant="body1" fontWeight={600} sx={{ opacity: 0.75 }}>
+                  Total group expenses
                 </Typography>
                 <Typography
                   variant="h2"
-                  fontWeight={900}
-                  sx={{ letterSpacing: "-0.02em" }}
+                  fontWeight={800}
+                  sx={{
+                    letterSpacing: "-2px",
+                    fontSize: { xs: "2.6rem", sm: "3.5rem" },
+                    lineHeight: 1.1,
+                  }}
                 >
                   ₹{summaryData?.total_amount || 0}
                 </Typography>
               </Box>
             </Box>
-          </Paper>
+          </Box>
         </Slide>
 
-        {/* Member Balances */}
-        <Fade in timeout={1200}>
-          <Paper
-            sx={{
-              p: 4,
-              borderRadius: 0,
-              background: "#ffffff",
-              border: "3px solid #000000",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.2)",
-              mb: 4,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-              <Box
-                sx={{
-                  background: "#000000",
-                  color: "#ffffff",
-                  p: 1.5,
-                  borderRadius: "50%",
-                  mr: 2,
-                }}
-              >
-                <Group sx={{ fontSize: 24 }} />
-              </Box>
-              <Typography
-                variant="h5"
-                fontWeight={900}
-                color="#000000"
-                sx={{ textTransform: "uppercase" }}
-              >
-                Member Balances
-              </Typography>
-            </Box>
-
-            <Divider
-              sx={{ mb: 3, borderColor: "#000000", borderWidth: "2px" }}
+        {/* Member balances */}
+        <Fade in timeout={1100}>
+          <Card elevation={0} sx={{ ...cardSx, mb: 4 }}>
+            <CardHeader
+              sx={{ p: 3, pb: 2 }}
+              avatar={
+                <Box sx={iconTile(52)}>
+                  <Group sx={{ fontSize: 26 }} />
+                </Box>
+              }
+              title={
+                <Typography
+                  variant="h5"
+                  fontWeight={800}
+                  color={ui.ink}
+                  sx={{ letterSpacing: "-0.5px" }}
+                >
+                  Member Balances
+                </Typography>
+              }
+              subheader={
+                <Typography variant="body2" sx={{ color: ui.muted }}>
+                  What each person paid, owes and is left with
+                </Typography>
+              }
             />
 
-            <Grid container spacing={3}>
-              {summaryData?.member_balances?.map((member, index) => (
-                <Grid item xs={12} sm={6} key={member.id}>
-                  <Slide direction="right" in timeout={1400 + index * 200}>
-                    <Card
-                      sx={{
-                        border: "2px solid #000000",
-                        borderRadius: 0,
-                        background: index % 2 === 0 ? "#000000" : "#ffffff",
-                        color: index % 2 === 0 ? "#ffffff" : "#000000",
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          transform: "translateY(-5px)",
-                          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-                        },
-                      }}
-                    >
-                      <CardContent sx={{ p: 3 }}>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", mb: 2 }}
-                        >
-                          <Box
+            <CardContent sx={{ pt: 0, px: 3, pb: 3 }}>
+              {balances.length === 0 ? (
+                <Box sx={{ textAlign: "center", py: 5 }}>
+                  <Typography variant="h6" sx={{ color: ui.ink, fontWeight: 700 }} gutterBottom>
+                    No balances yet
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: ui.muted }}>
+                    Add an expense to see who owes what
+                  </Typography>
+                </Box>
+              ) : (
+                <Grid container spacing={2.5}>
+                  {balances.map((member, index) => {
+                    const [from, to] = accents[index % accents.length];
+                    const net = parseFloat(member.net_balance);
+                    const isPositive = net >= 0;
+
+                    return (
+                      <Grid item xs={12} sm={6} key={member.id}>
+                        <Slide direction="right" in timeout={1000 + index * 200}>
+                          <Card
+                            elevation={0}
                             sx={{
-                              width: 48,
-                              height: 48,
-                              backgroundColor:
-                                index % 2 === 0 ? "#ffffff" : "#000000",
-                              borderRadius: "50%",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              mr: 2,
-                              fontWeight: 900,
-                              fontSize: "1.2rem",
-                              color: index % 2 === 0 ? "#000000" : "#ffffff",
+                              position: "relative",
+                              overflow: "hidden",
+                              height: "100%",
+                              borderRadius: "22px",
+                              backgroundColor: "#fff",
+                              border: `1px solid ${ui.line}`,
+                              transition: "all 0.25s ease",
+                              "&::before": {
+                                content: '""',
+                                position: "absolute",
+                                left: 0,
+                                top: 0,
+                                bottom: 0,
+                                width: 5,
+                                background: `linear-gradient(180deg, ${from}, ${to})`,
+                              },
+                              "&:hover": {
+                                transform: "translateY(-4px)",
+                                boxShadow: `0 18px 34px -20px ${to}`,
+                              },
                             }}
                           >
-                            {member.username.charAt(0).toUpperCase()}
-                          </Box>
-                          <Typography variant="h6" fontWeight={800}>
-                            {member.username}
-                          </Typography>
-                        </Box>
+                            <CardContent sx={{ p: 3, pl: 3.5 }}>
+                              <Box sx={{ display: "flex", alignItems: "center", mb: 2.5 }}>
+                                <Avatar
+                                  sx={{
+                                    background: `linear-gradient(135deg, ${from}, ${to})`,
+                                    width: 48,
+                                    height: 48,
+                                    mr: 2,
+                                    fontWeight: 800,
+                                    color: "#fff",
+                                    boxShadow: `0 0 0 2px #fff, 0 0 0 3.5px ${from}`,
+                                  }}
+                                >
+                                  {member.username.charAt(0).toUpperCase()}
+                                </Avatar>
+                                <Typography
+                                  variant="h6"
+                                  fontWeight={700}
+                                  color={ui.ink}
+                                  sx={{ fontSize: "1.1rem", wordBreak: "break-word" }}
+                                >
+                                  {member.username}
+                                </Typography>
+                              </Box>
 
-                        <Stack spacing={2}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Typography variant="body2" fontWeight={600}>
-                              Paid Amount:
-                            </Typography>
-                            <Chip
-                              icon={
-                                <TrendingUp
-                                  sx={{ color: "inherit !important" }}
-                                />
-                              }
-                              label={`₹${member.paid}`}
-                              sx={{
-                                backgroundColor:
-                                  index % 2 === 0 ? "#ffffff" : "#000000",
-                                color: index % 2 === 0 ? "#000000" : "#ffffff",
-                                fontWeight: 700,
-                                borderRadius: 0,
-                              }}
-                            />
-                          </Box>
+                              <Stack spacing={1.5}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Typography variant="body2" fontWeight={600} sx={{ color: ui.muted }}>
+                                    Paid
+                                  </Typography>
+                                  <Chip
+                                    icon={<TrendingUp sx={{ color: "#047857 !important" }} />}
+                                    label={`₹${member.paid}`}
+                                    size="small"
+                                    sx={{
+                                      backgroundColor: "#ECFDF5",
+                                      color: "#065F46",
+                                      fontWeight: 800,
+                                    }}
+                                  />
+                                </Box>
 
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Typography variant="body2" fontWeight={600}>
-                              Owes Amount:
-                            </Typography>
-                            <Chip
-                              icon={
-                                <TrendingDown
-                                  sx={{ color: "inherit !important" }}
-                                />
-                              }
-                              label={`₹${member.owes}`}
-                              sx={{
-                                backgroundColor:
-                                  index % 2 === 0 ? "#ffffff" : "#000000",
-                                color: index % 2 === 0 ? "#000000" : "#ffffff",
-                                fontWeight: 700,
-                                borderRadius: 0,
-                              }}
-                            />
-                          </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Typography variant="body2" fontWeight={600} sx={{ color: ui.muted }}>
+                                    Owes
+                                  </Typography>
+                                  <Chip
+                                    icon={<TrendingDown sx={{ color: "#BE123C !important" }} />}
+                                    label={`₹${member.owes}`}
+                                    size="small"
+                                    sx={{
+                                      backgroundColor: "#FFF1F2",
+                                      color: "#9F1239",
+                                      fontWeight: 800,
+                                    }}
+                                  />
+                                </Box>
 
-                          <Divider
-                            sx={{
-                              my: 1,
-                              borderColor:
-                                index % 2 === 0 ? "#ffffff" : "#000000",
-                              opacity: 0.5,
-                            }}
-                          />
-
-                          <Box
-                            sx={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              alignItems: "center",
-                            }}
-                          >
-                            <Typography variant="h6" fontWeight={800}>
-                              Net Balance:
-                            </Typography>
-                            <Typography
-                              variant="h5"
-                              fontWeight={900}
-                              sx={{
-                                color:
-                                  parseFloat(member.net_balance) >= 0
-                                    ? index % 2 === 0
-                                      ? "#ffffff"
-                                      : "#000000"
-                                    : index % 2 === 0
-                                    ? "#ffffff"
-                                    : "#000000",
-                              }}
-                            >
-                              ₹{member.net_balance}
-                            </Typography>
-                          </Box>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  </Slide>
+                                <Box
+                                  sx={{
+                                    mt: 0.5,
+                                    p: 1.75,
+                                    borderRadius: "16px",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    backgroundColor: "rgba(241,245,249,0.8)",
+                                  }}
+                                >
+                                  <Typography variant="body1" fontWeight={700} color={ui.ink}>
+                                    Net balance
+                                  </Typography>
+                                  <Typography
+                                    variant="h6"
+                                    fontWeight={800}
+                                    sx={{
+                                      letterSpacing: "-0.5px",
+                                      color: isPositive ? ui.positive : ui.negative,
+                                    }}
+                                  >
+                                    ₹{member.net_balance}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </CardContent>
+                          </Card>
+                        </Slide>
+                      </Grid>
+                    );
+                  })}
                 </Grid>
-              ))}
-            </Grid>
-          </Paper>
+              )}
+            </CardContent>
+          </Card>
         </Fade>
 
-        {/* Action Buttons */}
-        <Fade in timeout={1600}>
-          <Paper
-            sx={{
-              p: 4,
-              borderRadius: 0,
-              background: "#ffffff",
-              border: "3px solid #000000",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.2)",
-            }}
-          >
+        {/* Quick actions */}
+        <Fade in timeout={1400}>
+          <Paper elevation={0} sx={{ ...cardSx, p: { xs: 3, sm: 4 } }}>
             <Typography
               variant="h6"
-              fontWeight={900}
+              fontWeight={800}
               gutterBottom
-              sx={{
-                mb: 3,
-                color: "#000000",
-                textTransform: "uppercase",
-                borderBottom: "2px solid #000000",
-                paddingBottom: 1,
-              }}
+              sx={{ mb: 3, color: ui.ink, letterSpacing: "-0.3px" }}
             >
               Quick Actions
             </Typography>
 
             <Stack
               direction={{ xs: "column", sm: "row" }}
-              spacing={3}
+              spacing={2.5}
               justifyContent="center"
             >
               <Button
@@ -515,25 +596,7 @@ export default function Summary() {
                 size="large"
                 startIcon={<AddCircle />}
                 onClick={() => navigate(`/groups/${groupId}/add-expense`)}
-                sx={{
-                  py: 2,
-                  px: 4,
-                  borderRadius: 0,
-                  fontWeight: 700,
-                  borderColor: "#000000",
-                  color: "#000000",
-                  borderWidth: 2,
-                  fontSize: "1.1rem",
-                  "&:hover": {
-                    backgroundColor: "#000000",
-                    color: "#ffffff",
-                    borderColor: "#000000",
-                    borderWidth: 2,
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 8px 25px rgba(0, 0, 0, 0.3)",
-                  },
-                  transition: "all 0.3s ease",
-                }}
+                sx={ghostBtn}
               >
                 Add New Expense
               </Button>
@@ -543,25 +606,7 @@ export default function Summary() {
                 size="large"
                 startIcon={<Group />}
                 onClick={() => navigate(`/groups/${groupId}/add-members`)}
-                sx={{
-                  py: 2,
-                  px: 4,
-                  borderRadius: 0,
-                  fontWeight: 700,
-                  borderColor: "#000000",
-                  color: "#000000",
-                  borderWidth: 2,
-                  fontSize: "1.1rem",
-                  "&:hover": {
-                    backgroundColor: "#000000",
-                    color: "#ffffff",
-                    borderColor: "#000000",
-                    borderWidth: 2,
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 8px 25px rgba(0, 0, 0, 0.3)",
-                  },
-                  transition: "all 0.3s ease",
-                }}
+                sx={ghostBtn}
               >
                 Manage Members
               </Button>
@@ -569,25 +614,23 @@ export default function Summary() {
               <Button
                 variant="contained"
                 size="large"
+                disableElevation
                 startIcon={<Receipt />}
                 onClick={() => navigate("/groups")}
                 sx={{
-                  py: 2,
+                  py: 1.6,
                   px: 4,
-                  borderRadius: 0,
-                  fontWeight: 700,
-                  fontSize: "1.1rem",
-                  background: "#000000",
-                  color: "#ffffff",
-                  border: "2px solid #000000",
+                  borderRadius: "999px",
+                  fontWeight: 800,
+                  textTransform: "none",
+                  color: "#fff",
+                  background: ui.aurora,
+                  boxShadow: "0 22px 40px -16px rgba(99,102,241,0.85)",
+                  transition: "all 0.25s ease",
                   "&:hover": {
-                    background: "#ffffff",
-                    color: "#000000",
-                    border: "2px solid #000000",
                     transform: "translateY(-2px)",
-                    boxShadow: "0 8px 25px rgba(0, 0, 0, 0.3)",
+                    filter: "brightness(1.07)",
                   },
-                  transition: "all 0.3s ease",
                 }}
               >
                 All Groups
