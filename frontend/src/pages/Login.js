@@ -29,62 +29,49 @@ import { useNavigate } from "react-router-dom";
 const ui = {
   ink: "#0B1020",
   muted: "#64748B",
-  line: "rgba(15,23,42,0.08)",
+  line: "rgba(15,23,42,0.1)",
   teal: "#14B8A6",
+  blue: "#3B82F6",
   coral: "#F43F5E",
   aurora: "linear-gradient(135deg, #14B8A6 0%, #3B82F6 50%, #8B5CF6 100%)",
 };
 
+const display = "'Bricolage Grotesque', 'Inter', system-ui, sans-serif";
+const focusRing = { outline: `2px solid ${ui.blue}`, outlineOffset: 3 };
+
+/* Page: plain pale background with a faint dot grid, nothing moving */
 const pageSx = {
   position: "relative",
-  overflow: "hidden",
   minHeight: "100vh",
   backgroundColor: "#F8FAFC",
+  backgroundImage: "radial-gradient(rgba(15,23,42,0.06) 1px, transparent 1px)",
+  backgroundSize: "22px 22px",
   display: "flex",
   alignItems: "center",
-  "&::before": {
-    content: '""',
-    position: "absolute",
-    top: -160,
-    left: -120,
-    width: 520,
-    height: 520,
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(20,184,166,0.22), transparent 65%)",
-    pointerEvents: "none",
-  },
-  "&::after": {
-    content: '""',
-    position: "absolute",
-    bottom: -180,
-    right: -140,
-    width: 560,
-    height: 560,
-    borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(139,92,246,0.20), transparent 65%)",
-    pointerEvents: "none",
-  },
 };
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "16px",
-    backgroundColor: "rgba(241,245,249,0.75)",
-    fontWeight: 600,
-    transition: "all 0.2s ease",
+    backgroundColor: "rgba(15,23,42,0.045)",
+    fontFamily: display,
+    fontWeight: 700,
+    transition: "background-color 0.2s ease, box-shadow 0.2s ease",
     "& fieldset": { borderColor: "transparent" },
     "&:hover fieldset": { borderColor: "#5EEAD4" },
     "&.Mui-focused": {
       backgroundColor: "#fff",
-      boxShadow: "0 0 0 4px rgba(20,184,166,0.15)",
+      boxShadow: "0 0 0 4px rgba(20,184,166,0.16)",
     },
     "&.Mui-focused fieldset": { borderColor: ui.teal, borderWidth: 2 },
     "&.Mui-error fieldset": { borderColor: ui.coral },
     "&.Mui-error.Mui-focused": { boxShadow: "0 0 0 4px rgba(244,63,94,0.15)" },
   },
-  "& .MuiInputLabel-root.Mui-focused": { color: "#0D9488" },
+  "& .MuiOutlinedInput-input": { py: 1.9 },
+  "& .MuiInputLabel-root": { fontFamily: display, fontWeight: 600 },
+  "& .MuiInputLabel-root.Mui-focused": { color: ui.ink },
   "& .MuiInputLabel-root.Mui-error": { color: ui.coral },
-  "& .MuiFormHelperText-root": { fontWeight: 600, ml: 1 },
+  "& .MuiFormHelperText-root": { fontFamily: display, fontWeight: 600, ml: 1 },
 };
 
 export default function Login() {
@@ -127,51 +114,83 @@ export default function Login() {
 
   return (
     <Box sx={pageSx}>
-      <Container maxWidth="xs" sx={{ position: "relative", zIndex: 1, py: 6, pb: 12 }}>
+      {/* Bottom padding keeps the card clear of the fixed footer */}
+      <Container maxWidth="xs" sx={{ py: 6, pb: 14 }}>
         <Paper
           elevation={0}
           sx={{
             p: { xs: 3.5, sm: 5 },
-            borderRadius: "32px",
-            backgroundColor: "rgba(255,255,255,0.88)",
-            backdropFilter: "blur(14px)",
+            borderRadius: "28px",
+            backgroundColor: "#fff",
             border: `1px solid ${ui.line}`,
-            boxShadow:
-              "0 40px 80px -32px rgba(59,130,246,0.45), 0 2px 8px rgba(15,23,42,0.04)",
+            boxShadow: "0 24px 60px -34px rgba(59,130,246,0.45)",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
           }}
         >
+          {/* Brand mark: the split coin from the navbar */}
           <Box
-            sx={{
-              width: 68,
-              height: 68,
-              mb: 2.5,
-              borderRadius: "22px",
-              display: "grid",
-              placeItems: "center",
-              color: "#fff",
-              background: ui.aurora,
-              boxShadow:
-                "0 20px 36px -14px rgba(99,102,241,0.85), inset 0 1px 0 rgba(255,255,255,0.4)",
-            }}
+            aria-hidden
+            sx={{ position: "relative", width: 60, height: 60, mb: 2.5 }}
           >
-            <LockRoundedIcon sx={{ fontSize: 32 }} />
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #14B8A6, #3B82F6)",
+                clipPath: "polygon(0 0, 100% 0, 0 100%)",
+                transform: "translate(-2px,-2px)",
+              }}
+            />
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #8B5CF6, #F43F5E)",
+                clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
+                transform: "translate(2px,2px)",
+              }}
+            />
           </Box>
+
           <Typography
             component="h1"
             variant="h4"
-            sx={{ fontWeight: 800, color: ui.ink, letterSpacing: "-1.2px" }}
+            sx={{
+              fontFamily: display,
+              fontWeight: 800,
+              color: ui.ink,
+              letterSpacing: "-0.055em",
+              fontSize: "2.4rem",
+              lineHeight: 1.05,
+            }}
           >
             Login
           </Typography>
           <Typography
             variant="body2"
-            sx={{ color: ui.muted, mt: 0.75, fontWeight: 500, textAlign: "center" }}
+            sx={{
+              color: ui.muted,
+              mt: 1,
+              fontWeight: 500,
+              textAlign: "center",
+            }}
           >
             Sign in to continue to Expense Splitter
           </Typography>
+
+          {/* Tear line */}
+          <Box
+            aria-hidden
+            sx={{
+              width: "100%",
+              mt: 3,
+              borderTop: "2px dashed rgba(15,23,42,0.14)",
+            }}
+          />
 
           {serverError && (
             <Alert
@@ -180,6 +199,7 @@ export default function Login() {
                 mt: 3,
                 width: "100%",
                 borderRadius: "16px",
+                fontFamily: display,
                 fontWeight: 600,
                 alignItems: "center",
                 backgroundColor: "#FFF1F2",
@@ -195,7 +215,7 @@ export default function Login() {
           <Box
             component="form"
             onSubmit={handleSubmit}
-            sx={{ mt: 2, width: "100%" }}
+            sx={{ mt: 1.5, width: "100%" }}
           >
             <TextField
               margin="normal"
@@ -247,19 +267,15 @@ export default function Login() {
                 mb: 1,
                 py: 1.8,
                 borderRadius: "999px",
+                fontFamily: display,
                 fontSize: "1.05rem",
                 fontWeight: 800,
                 textTransform: "none",
+                letterSpacing: "-0.02em",
                 color: "#fff",
                 background: ui.aurora,
-                backgroundSize: "200% 200%",
-                boxShadow: "0 22px 40px -16px rgba(99,102,241,0.85)",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  backgroundPosition: "100% 50%",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 28px 46px -16px rgba(99,102,241,0.95)",
-                },
+                "&:hover": { filter: "brightness(1.07)" },
+                "&:focus-visible": focusRing,
               }}
             >
               Login

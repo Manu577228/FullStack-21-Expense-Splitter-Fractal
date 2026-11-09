@@ -27,7 +27,6 @@ import {
   InputAdornment,
   Avatar,
 } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import NotesRoundedIcon from "@mui/icons-material/NotesRounded";
@@ -42,10 +41,14 @@ import { apiFetch } from "../api";
 const ui = {
   ink: "#0B1020",
   muted: "#64748B",
-  line: "rgba(15,23,42,0.08)",
+  line: "rgba(15,23,42,0.09)",
   teal: "#14B8A6",
+  blue: "#3B82F6",
   aurora: "linear-gradient(135deg, #14B8A6 0%, #3B82F6 50%, #8B5CF6 100%)",
 };
+
+const display = "'Bricolage Grotesque', 'Inter', system-ui, sans-serif";
+const focusRing = { outline: `2px solid ${ui.blue}`, outlineOffset: 3 };
 
 const accents = [
   ["#14B8A6", "#3B82F6"],
@@ -55,11 +58,15 @@ const accents = [
   ["#6366F1", "#8B5CF6"],
 ];
 
+/* Page: pale paper with a faint dot grid and two soft aurora glows */
 const pageSx = {
   position: "relative",
   overflow: "hidden",
   minHeight: "100vh",
   backgroundColor: "#F8FAFC",
+  backgroundImage:
+    "radial-gradient(rgba(15,23,42,0.07) 1px, transparent 1px)",
+  backgroundSize: "22px 22px",
   "&::before": {
     content: '""',
     position: "absolute",
@@ -84,29 +91,36 @@ const pageSx = {
   },
 };
 
+/* Generic card used for loading / warning states */
 const cardSx = {
   borderRadius: "28px",
-  backgroundColor: "rgba(255,255,255,0.88)",
-  backdropFilter: "blur(14px)",
+  backgroundColor: "rgba(255,255,255,0.92)",
   border: `1px solid ${ui.line}`,
-  boxShadow: "0 30px 70px -30px rgba(59,130,246,0.35), 0 2px 8px rgba(15,23,42,0.04)",
+  boxShadow:
+    "0 30px 70px -30px rgba(59,130,246,0.35), 0 2px 8px rgba(15,23,42,0.04)",
 };
+
+/* The main form is a receipt: its bottom edge is torn into teeth */
+const TOOTH = 22;
+const receiptMask = `linear-gradient(#000 0 0) top / 100% calc(100% - ${TOOTH / 2}px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / ${TOOTH}px ${TOOTH / 2}px repeat-x`;
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
     borderRadius: "16px",
-    backgroundColor: "rgba(241,245,249,0.75)",
-    fontWeight: 600,
-    transition: "all 0.2s ease",
+    backgroundColor: "rgba(15,23,42,0.045)",
+    fontFamily: display,
+    fontWeight: 700,
+    transition: "background-color 0.2s ease, box-shadow 0.2s ease",
     "& fieldset": { borderColor: "transparent" },
     "&:hover fieldset": { borderColor: "#5EEAD4" },
     "&.Mui-focused": {
       backgroundColor: "#fff",
-      boxShadow: "0 0 0 4px rgba(20,184,166,0.15)",
+      boxShadow: "0 0 0 4px rgba(20,184,166,0.16)",
     },
     "&.Mui-focused fieldset": { borderColor: ui.teal, borderWidth: 2 },
   },
-  "& .MuiInputLabel-root.Mui-focused": { color: "#0D9488" },
+  "& .MuiInputLabel-root": { fontFamily: display, fontWeight: 600 },
+  "& .MuiInputLabel-root.Mui-focused": { color: ui.ink },
   "& input[type=number]": { MozAppearance: "textfield" },
   "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
     WebkitAppearance: "none",
@@ -129,6 +143,7 @@ const rupeeChip = {
 const iconTile = (size = 38) => ({
   width: size,
   height: size,
+  flexShrink: 0,
   borderRadius: "13px",
   display: "grid",
   placeItems: "center",
@@ -141,9 +156,14 @@ const iconTile = (size = 38) => ({
 const alertBase = {
   mb: 2,
   borderRadius: "16px",
+  fontFamily: display,
   fontWeight: 600,
   alignItems: "center",
 };
+
+/* Ticket geometry for custom-split rows (matches ExpenseSplitField) */
+const STUB = 72;
+const ticketMask = `radial-gradient(circle 9px at ${STUB}px 0, #0000 97%, #000), radial-gradient(circle 9px at ${STUB}px 100%, #0000 97%, #000)`;
 
 function SectionTitle({ icon, children }) {
   return (
@@ -151,7 +171,13 @@ function SectionTitle({ icon, children }) {
       <Box sx={iconTile()}>{icon}</Box>
       <Typography
         variant="h5"
-        sx={{ fontWeight: 800, color: ui.ink, letterSpacing: "-0.5px", fontSize: "1.4rem" }}
+        sx={{
+          fontFamily: display,
+          fontWeight: 800,
+          color: ui.ink,
+          letterSpacing: "-0.03em",
+          fontSize: "1.4rem",
+        }}
       >
         {children}
       </Typography>
@@ -264,7 +290,9 @@ export default function AddExpense() {
               sx={{ ...cardSx, p: 5, textAlign: "center", minWidth: 260 }}
             >
               <CircularProgress size={46} thickness={4} sx={{ color: ui.teal, mb: 2 }} />
-              <Typography sx={{ mt: 2, color: ui.ink, fontWeight: 700 }}>
+              <Typography
+                sx={{ mt: 2, color: ui.ink, fontFamily: display, fontWeight: 700 }}
+              >
                 Loading group...
               </Typography>
             </Paper>
@@ -307,10 +335,12 @@ export default function AddExpense() {
                   borderRadius: "999px",
                   px: 3.5,
                   py: 1.1,
+                  fontFamily: display,
                   fontWeight: 700,
                   textTransform: "none",
                   boxShadow: "0 14px 26px -12px rgba(11,16,32,0.7)",
                   "&:hover": { background: ui.aurora },
+                  "&:focus-visible": focusRing,
                 }}
               >
                 Back
@@ -321,6 +351,16 @@ export default function AddExpense() {
       </Box>
     );
 
+  /* Read-only numbers used only to draw the split bar and share labels */
+  const splitAmt = (username) =>
+    Math.max(0, parseFloat(customSplits[username]) || 0);
+  const allocated = members.reduce((sum, m) => sum + splitAmt(m.username), 0);
+  const shareOf = (username) =>
+    allocated > 0 ? Math.round((splitAmt(username) / allocated) * 100) : 0;
+  const allocatedLabel = allocated.toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+  });
+
   return (
     <Box sx={{ ...pageSx, py: { xs: 3, sm: 4 } }}>
       <Container maxWidth="sm" sx={{ position: "relative", zIndex: 1, pb: 12 }}>
@@ -330,24 +370,28 @@ export default function AddExpense() {
             aria-label="Back"
             onClick={() => navigate(`/groups/${groupId}/add-members`)}
             sx={{
+              width: 46,
+              height: 46,
               background: ui.ink,
               color: "#fff",
               boxShadow: "0 14px 26px -10px rgba(11,16,32,0.6)",
               transition: "all 0.3s ease",
               "&:hover": { background: ui.aurora, transform: "translateX(-3px)" },
+              "&:focus-visible": focusRing,
             }}
           >
-            <ArrowBack />
+            <ArrowBackRoundedIcon />
           </IconButton>
-          <Box>
+          <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="h4"
               sx={{
+                fontFamily: display,
                 fontWeight: 800,
                 color: ui.ink,
-                letterSpacing: "-1.2px",
-                lineHeight: 1.1,
-                fontSize: { xs: "1.9rem", sm: "2.4rem" },
+                letterSpacing: "-0.05em",
+                lineHeight: 1.05,
+                fontSize: { xs: "2rem", sm: "2.7rem" },
               }}
             >
               Add Expense
@@ -360,13 +404,18 @@ export default function AddExpense() {
                 mt: 1,
                 px: 1.5,
                 py: 0.5,
+                maxWidth: "100%",
                 borderRadius: "999px",
                 backgroundColor: "rgba(20,184,166,0.12)",
                 color: "#0F766E",
               }}
             >
               <GroupsRoundedIcon sx={{ fontSize: 18 }} />
-              <Typography variant="body2" fontWeight={700}>
+              <Typography
+                variant="body2"
+                noWrap
+                sx={{ fontFamily: display, fontWeight: 700 }}
+              >
                 {group?.name}
               </Typography>
             </Box>
@@ -403,259 +452,434 @@ export default function AddExpense() {
           </Alert>
         )}
 
-        <Paper elevation={0} sx={{ ...cardSx, p: { xs: 3, sm: 4 } }}>
-          <SectionTitle icon={<ReceiptLongRoundedIcon sx={{ fontSize: 20 }} />}>
-            Expense Details
-          </SectionTitle>
-
-          <TextField
-            label="Description"
-            fullWidth
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter expense description"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <NotesRoundedIcon sx={{ color: ui.teal }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ ...fieldSx, mb: 3 }}
-          />
-
-          <TextField
-            label="Amount"
-            fullWidth
-            type="number"
-            placeholder="Enter amount in ₹"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Box sx={rupeeChip}>₹</Box>
-                </InputAdornment>
-              ),
-            }}
-            sx={{ ...fieldSx, mb: 3 }}
-          />
-
-          <TextField
-            select
-            label="Paid By"
-            fullWidth
-            value={paidBy}
-            onChange={(e) => setPaidBy(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonRoundedIcon sx={{ color: ui.teal }} />
-                </InputAdornment>
-              ),
-            }}
-            SelectProps={{
-              MenuProps: {
-                PaperProps: {
-                  sx: {
-                    mt: 1,
-                    borderRadius: "16px",
-                    border: `1px solid ${ui.line}`,
-                    boxShadow: "0 24px 50px -20px rgba(15,23,42,0.35)",
-                    "& .MuiMenuItem-root": { borderRadius: "10px", mx: 0.75, fontWeight: 600 },
-                  },
-                },
-              },
-            }}
-            sx={{ ...fieldSx, mb: 3 }}
-          >
-            {members.map((m) => (
-              <MenuItem key={m.id} value={m.username}>
-                {m.username}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <Divider
+        {/* Receipt: the outer box carries the shadow, the paper is torn at the bottom */}
+        <Box
+          sx={{
+            filter: "drop-shadow(0 28px 34px rgba(59,130,246,0.22)) drop-shadow(0 2px 3px rgba(15,23,42,0.06))",
+          }}
+        >
+          <Paper
+            elevation={0}
             sx={{
-              my: 3.5,
-              border: 0,
-              height: 2,
-              borderRadius: 2,
-              background:
-                "linear-gradient(90deg, transparent, rgba(99,102,241,0.35), transparent)",
-            }}
-          />
-
-          <SectionTitle icon={<TuneRoundedIcon sx={{ fontSize: 20 }} />}>
-            Split Type
-          </SectionTitle>
-
-          <ToggleButtonGroup
-            value={splitType}
-            exclusive
-            onChange={(e, v) => v && setSplitType(v)}
-            fullWidth
-            sx={{
-              mb: 3,
-              p: 0.5,
-              borderRadius: "999px",
-              backgroundColor: "rgba(15,23,42,0.06)",
-              "& .MuiToggleButtonGroup-grouped": {
-                border: 0,
-                m: 0,
-                py: 1.2,
-                gap: 1,
-                color: ui.muted,
-                fontWeight: 700,
-                textTransform: "none",
-                borderRadius: "999px !important",
-                transition: "all 0.25s ease",
-                "&.Mui-selected": {
-                  color: "#fff",
-                  background: ui.ink,
-                  boxShadow: "0 12px 22px -10px rgba(11,16,32,0.7)",
-                },
-                "&.Mui-selected:hover": { background: ui.ink },
-              },
+              p: { xs: 3, sm: 4 },
+              pb: { xs: 5, sm: 6 },
+              borderRadius: "28px 28px 0 0",
+              backgroundColor: "rgba(255,255,255,0.96)",
+              border: `1px solid ${ui.line}`,
+              borderBottom: 0,
+              WebkitMask: receiptMask,
+              mask: receiptMask,
             }}
           >
-            <ToggleButton value="equal">
-              <PeopleAltRoundedIcon sx={{ fontSize: 20 }} />
-              Equal Split
-            </ToggleButton>
-            <ToggleButton value="custom">
-              <TuneRoundedIcon sx={{ fontSize: 20 }} />
-              Custom Split
-            </ToggleButton>
-          </ToggleButtonGroup>
+            <SectionTitle icon={<ReceiptLongRoundedIcon sx={{ fontSize: 20 }} />}>
+              Expense Details
+            </SectionTitle>
 
-          {splitType === "custom" && (
-            <Box sx={{ mb: 3 }}>
-              <Typography
-                variant="subtitle1"
-                sx={{ mb: 2, fontWeight: 800, color: ui.ink, letterSpacing: "-0.2px" }}
-              >
-                Custom Amounts
-              </Typography>
-              {members.map((m, index) => {
-                const [from, to] = accents[index % accents.length];
-                return (
-                  <Box
-                    key={m.id}
-                    sx={{
-                      position: "relative",
-                      overflow: "hidden",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1.5,
-                      mb: 2,
-                      py: 1.5,
-                      pr: 1.5,
-                      pl: 2.5,
+            <TextField
+              label="Description"
+              fullWidth
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter expense description"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <NotesRoundedIcon sx={{ color: ui.teal }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ ...fieldSx, mb: 3 }}
+            />
+
+            {/* The amount is the hero of the form, so it is set large */}
+            <TextField
+              label="Amount"
+              fullWidth
+              type="number"
+              placeholder="Enter amount in ₹"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Box sx={rupeeChip}>₹</Box>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                ...fieldSx,
+                mb: 3,
+                "& .MuiOutlinedInput-input": {
+                  fontSize: "1.6rem",
+                  fontWeight: 800,
+                  letterSpacing: "-0.03em",
+                  fontVariantNumeric: "tabular-nums",
+                  py: 1.75,
+                },
+              }}
+            />
+
+            <TextField
+              select
+              label="Paid By"
+              fullWidth
+              value={paidBy}
+              onChange={(e) => setPaidBy(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonRoundedIcon sx={{ color: ui.teal }} />
+                  </InputAdornment>
+                ),
+              }}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    sx: {
+                      mt: 1,
+                      p: 0.5,
                       borderRadius: "18px",
                       border: `1px solid ${ui.line}`,
-                      backgroundColor: "#fff",
-                      transition: "transform 0.25s ease, box-shadow 0.25s ease",
-                      "&::before": {
-                        content: '""',
-                        position: "absolute",
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: 5,
-                        background: `linear-gradient(180deg, ${from}, ${to})`,
+                      boxShadow: "0 24px 50px -20px rgba(15,23,42,0.35)",
+                      "& .MuiMenuItem-root": {
+                        borderRadius: "12px",
+                        fontFamily: display,
+                        fontWeight: 600,
                       },
-                      "&:focus-within": {
-                        transform: "translateY(-2px)",
-                        boxShadow: `0 18px 34px -18px ${to}`,
-                      },
-                    }}
-                  >
-                    <Avatar
-                      sx={{
-                        width: 38,
-                        height: 38,
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        background: `linear-gradient(135deg, ${from}, ${to})`,
-                        boxShadow: `0 0 0 2px #fff, 0 0 0 3.5px ${from}`,
-                      }}
-                    >
-                      {(m.username || "").charAt(0)}
-                    </Avatar>
-                    <TextField
-                      label={`Share for ${m.username} (₹)`}
-                      type="number"
-                      value={customSplits[m.username] || ""}
-                      onChange={(e) =>
-                        setCustomSplits({
-                          ...customSplits,
-                          [m.username]: e.target.value,
-                        })
-                      }
-                      placeholder="Enter amount in ₹"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Box
-                              sx={{
-                                ...rupeeChip,
-                                background: `linear-gradient(135deg, ${from}, ${to})`,
-                              }}
-                            >
-                              ₹
-                            </Box>
-                          </InputAdornment>
-                        ),
-                      }}
-                      sx={fieldSx}
-                      fullWidth
-                    />
-                  </Box>
-                );
-              })}
-            </Box>
-          )}
-
-          <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
-            <Button
-              variant="contained"
-              onClick={handleAddExpense}
-              disabled={submitting}
-              fullWidth
-              disableElevation
-              startIcon={
-                submitting ? (
-                  <CircularProgress size={20} thickness={5} sx={{ color: "#fff" }} />
-                ) : (
-                  <AddRoundedIcon />
-                )
-              }
-              sx={{
-                py: 2,
-                borderRadius: "999px",
-                fontSize: "1.1rem",
-                fontWeight: 800,
-                textTransform: "none",
-                letterSpacing: "-0.2px",
-                color: "#fff",
-                background: ui.aurora,
-                backgroundSize: "200% 200%",
-                boxShadow: "0 22px 40px -16px rgba(99,102,241,0.85)",
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  backgroundPosition: "100% 50%",
-                  transform: "translateY(-2px)",
-                  boxShadow: "0 28px 46px -16px rgba(99,102,241,0.95)",
+                    },
+                  },
                 },
-                "&.Mui-disabled": { color: "#fff", opacity: 0.75, background: ui.aurora },
+              }}
+              sx={{ ...fieldSx, mb: 3 }}
+            >
+              {members.map((m) => (
+                <MenuItem key={m.id} value={m.username}>
+                  {m.username}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            {/* Tear line */}
+            <Divider
+              sx={{
+                my: 4,
+                height: 0,
+                border: 0,
+                borderTop: "2px dashed rgba(15,23,42,0.14)",
+              }}
+            />
+
+            <SectionTitle icon={<TuneRoundedIcon sx={{ fontSize: 20 }} />}>
+              Split Type
+            </SectionTitle>
+
+            {/* Segmented control: the dark thumb slides to the chosen option */}
+            <ToggleButtonGroup
+              value={splitType}
+              exclusive
+              onChange={(e, v) => v && setSplitType(v)}
+              fullWidth
+              sx={{
+                position: "relative",
+                mb: 3,
+                p: 0.5,
+                borderRadius: "999px",
+                backgroundColor: "rgba(15,23,42,0.06)",
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  top: 4,
+                  bottom: 4,
+                  left: 4,
+                  width: "calc(50% - 4px)",
+                  borderRadius: "999px",
+                  background: ui.ink,
+                  boxShadow: "0 12px 22px -10px rgba(11,16,32,0.7)",
+                  transform:
+                    splitType === "custom" ? "translateX(100%)" : "translateX(0)",
+                  transition: "transform 0.4s cubic-bezier(.65,0,.35,1)",
+                },
+                "@media (prefers-reduced-motion: reduce)": {
+                  "&::before": { transition: "none" },
+                },
+                "& .MuiToggleButtonGroup-grouped": {
+                  position: "relative",
+                  zIndex: 1,
+                  border: 0,
+                  m: 0,
+                  py: 1.2,
+                  gap: 1,
+                  color: ui.muted,
+                  fontFamily: display,
+                  fontWeight: 700,
+                  textTransform: "none",
+                  borderRadius: "999px !important",
+                  backgroundColor: "transparent",
+                  transition: "color 0.25s ease",
+                  "&:hover": { backgroundColor: "transparent", color: ui.ink },
+                  "&.Mui-selected": {
+                    color: "#fff",
+                    backgroundColor: "transparent",
+                  },
+                  "&.Mui-selected:hover": {
+                    backgroundColor: "transparent",
+                    color: "#fff",
+                  },
+                  "&.Mui-focusVisible": focusRing,
+                },
               }}
             >
-              {submitting ? "Adding..." : "Add Expense"}
-            </Button>
-          </Box>
-        </Paper>
+              <ToggleButton value="equal">
+                <PeopleAltRoundedIcon sx={{ fontSize: 20 }} />
+                Equal Split
+              </ToggleButton>
+              <ToggleButton value="custom">
+                <TuneRoundedIcon sx={{ fontSize: 20 }} />
+                Custom Split
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {splitType === "custom" && (
+              <Box sx={{ mb: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "flex-end", mb: 1.5 }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      flexGrow: 1,
+                      fontFamily: display,
+                      fontWeight: 800,
+                      color: ui.ink,
+                      letterSpacing: "-0.025em",
+                    }}
+                  >
+                    Custom Amounts
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontFamily: display,
+                      fontWeight: 800,
+                      fontSize: "1.15rem",
+                      letterSpacing: "-0.03em",
+                      fontVariantNumeric: "tabular-nums",
+                      color: ui.ink,
+                    }}
+                  >
+                    ₹{allocatedLabel}
+                  </Typography>
+                </Box>
+
+                {/* Split bar: one segment per member, sized by their share */}
+                <Box
+                  role="img"
+                  aria-label="Share of each member in the split"
+                  sx={{
+                    display: "flex",
+                    gap: "3px",
+                    height: 12,
+                    mb: 2,
+                    borderRadius: "999px",
+                    overflow: "hidden",
+                    backgroundColor: "rgba(15,23,42,0.05)",
+                    backgroundImage:
+                      allocated === 0
+                        ? "repeating-linear-gradient(135deg, rgba(15,23,42,0.07) 0 6px, transparent 6px 12px)"
+                        : "none",
+                  }}
+                >
+                  {members.map((m, index) => {
+                    const amt = splitAmt(m.username);
+                    if (amt <= 0) return null;
+                    const [from, to] = accents[index % accents.length];
+                    return (
+                      <Box
+                        key={m.id}
+                        sx={{
+                          flexGrow: amt,
+                          flexBasis: 0,
+                          minWidth: 0,
+                          borderRadius: "999px",
+                          background: `linear-gradient(90deg, ${from}, ${to})`,
+                          transition: "flex-grow 0.55s cubic-bezier(.65,0,.35,1)",
+                        }}
+                      />
+                    );
+                  })}
+                </Box>
+
+                {members.map((m, index) => {
+                  const [from, to] = accents[index % accents.length];
+                  const pct = shareOf(m.username);
+                  return (
+                    <Box
+                      key={m.id}
+                      sx={{
+                        mb: 1.75,
+                        filter: "drop-shadow(0 1px 1px rgba(15,23,42,0.07))",
+                        transition: "transform 0.25s ease, filter 0.25s ease",
+                        "&:hover, &:focus-within": {
+                          transform: "translateY(-2px)",
+                          filter: `drop-shadow(0 14px 14px ${to}45)`,
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          position: "relative",
+                          display: "flex",
+                          alignItems: "stretch",
+                          borderRadius: "18px",
+                          border: `1px solid ${ui.line}`,
+                          backgroundColor: "#fff",
+                          WebkitMask: ticketMask,
+                          WebkitMaskComposite: "source-in",
+                          mask: ticketMask,
+                          maskComposite: "intersect",
+                        }}
+                      >
+                        {/* Stub */}
+                        <Box
+                          sx={{
+                            width: STUB,
+                            flexShrink: 0,
+                            display: "grid",
+                            placeItems: "center",
+                            gap: 0.25,
+                            py: 1.5,
+                            background: `linear-gradient(135deg, ${from}1F, ${to}1F)`,
+                          }}
+                        >
+                          <Avatar
+                            sx={{
+                              width: 38,
+                              height: 38,
+                              fontFamily: display,
+                              fontWeight: 800,
+                              textTransform: "uppercase",
+                              background: `linear-gradient(135deg, ${from}, ${to})`,
+                              boxShadow: `0 0 0 2px #fff, 0 0 0 3.5px ${from}`,
+                            }}
+                          >
+                            {(m.username || "").charAt(0)}
+                          </Avatar>
+                        </Box>
+
+                        {/* Tear line */}
+                        <Box
+                          aria-hidden
+                          sx={{
+                            position: "absolute",
+                            top: 14,
+                            bottom: 14,
+                            left: STUB - 2,
+                            borderLeft: "2px dashed rgba(15,23,42,0.16)",
+                          }}
+                        />
+
+                        {/* Body */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            flexGrow: 1,
+                            minWidth: 0,
+                            gap: 1.25,
+                            py: 1.5,
+                            pl: 2.25,
+                            pr: 1.5,
+                          }}
+                        >
+                          <TextField
+                            label={`Share for ${m.username} (₹)`}
+                            type="number"
+                            value={customSplits[m.username] || ""}
+                            onChange={(e) =>
+                              setCustomSplits({
+                                ...customSplits,
+                                [m.username]: e.target.value,
+                              })
+                            }
+                            placeholder="Enter amount in ₹"
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <Box
+                                    sx={{
+                                      ...rupeeChip,
+                                      background: `linear-gradient(135deg, ${from}, ${to})`,
+                                    }}
+                                  >
+                                    ₹
+                                  </Box>
+                                </InputAdornment>
+                              ),
+                            }}
+                            sx={fieldSx}
+                            fullWidth
+                          />
+                          <Typography
+                            sx={{
+                              width: 42,
+                              flexShrink: 0,
+                              textAlign: "right",
+                              fontFamily: display,
+                              fontWeight: 800,
+                              fontSize: "0.85rem",
+                              fontVariantNumeric: "tabular-nums",
+                              color: pct > 0 ? ui.ink : "#94A3B8",
+                              transition: "color 0.25s ease",
+                            }}
+                          >
+                            {pct}%
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+
+            <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                variant="contained"
+                onClick={handleAddExpense}
+                disabled={submitting}
+                fullWidth
+                disableElevation
+                startIcon={
+                  submitting ? (
+                    <CircularProgress size={20} thickness={5} sx={{ color: "#fff" }} />
+                  ) : (
+                    <AddRoundedIcon />
+                  )
+                }
+                sx={{
+                  py: 2,
+                  borderRadius: "999px",
+                  fontFamily: display,
+                  fontSize: "1.1rem",
+                  fontWeight: 800,
+                  textTransform: "none",
+                  letterSpacing: "-0.02em",
+                  color: "#fff",
+                  background: ui.aurora,
+                  backgroundSize: "200% 200%",
+                  boxShadow: "0 22px 40px -16px rgba(99,102,241,0.85)",
+                  transition: "all 0.3s ease",
+                  "&:hover": {
+                    backgroundPosition: "100% 50%",
+                    transform: "translateY(-2px)",
+                    boxShadow: "0 28px 46px -16px rgba(99,102,241,0.95)",
+                  },
+                  "&:focus-visible": focusRing,
+                  "&.Mui-disabled": { color: "#fff", opacity: 0.75, background: ui.aurora },
+                }}
+              >
+                {submitting ? "Adding..." : "Add Expense"}
+              </Button>
+            </Box>
+          </Paper>
+        </Box>
       </Container>
     </Box>
   );

@@ -39,6 +39,7 @@ import {
   AddCircle,
   Group,
   Receipt,
+  Refresh,
   Error as ErrorIcon,
 } from "@mui/icons-material";
 import { apiFetch } from "../api";
@@ -61,6 +62,42 @@ const accents = [
   ["#10B981", "#06B6D4"],
   ["#6366F1", "#8B5CF6"],
 ];
+
+/* ---------- Display helpers (UI only) ---------- */
+// 12345.5 -> "12,345.5" (Indian digit grouping); falls back to the raw value
+const money = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n)
+    ? n.toLocaleString("en-IN", { maximumFractionDigits: 2 })
+    : String(v ?? 0);
+};
+
+// -250 -> "-₹250"
+const signedMoney = (v) => {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return `₹${v ?? 0}`;
+  return `${n < 0 ? "-" : ""}₹${money(Math.abs(n))}`;
+};
+
+const balanceStatus = (net) => {
+  if (net > 0.005) return { label: "Gets back", color: ui.positive, bg: "#ECFDF5" };
+  if (net < -0.005) return { label: "Needs to pay", color: ui.negative, bg: "#FFF1F2" };
+  return { label: "All settled", color: ui.muted, bg: "rgba(241,245,249,0.9)" };
+};
+
+const reduceMotion = {
+  "@media (prefers-reduced-motion: reduce)": {
+    transition: "none",
+    "&:hover": { transform: "none" },
+  },
+};
+
+const focusRing = {
+  "&:focus-visible": {
+    outline: "3px solid rgba(59,130,246,0.45)",
+    outlineOffset: 3,
+  },
+};
 
 const pageSx = {
   position: "relative",
@@ -102,6 +139,7 @@ const cardSx = {
 const iconTile = (size = 48) => ({
   width: size,
   height: size,
+  flexShrink: 0,
   borderRadius: "16px",
   display: "grid",
   placeItems: "center",
@@ -128,6 +166,8 @@ const ghostBtn = {
     transform: "translateY(-2px)",
     boxShadow: "0 16px 28px -14px rgba(11,16,32,0.7)",
   },
+  ...focusRing,
+  ...reduceMotion,
 };
 
 export default function Summary() {
@@ -145,6 +185,8 @@ export default function Summary() {
   }, [groupId]);
 
   const loadSummary = async () => {
+    setError("");
+    setLoading(true);
     try {
       const gRes = await apiFetch(`/api/groups/${groupId}/`);
       if (!gRes?.ok) throw new Error("Failed to load group");
@@ -172,9 +214,11 @@ export default function Summary() {
           p: { xs: 2, sm: 3 },
         }}
       >
-        <Fade in timeout={800}>
+        <Fade in timeout={600}>
           <Paper
             elevation={0}
+            role="status"
+            aria-live="polite"
             sx={{
               ...cardSx,
               position: "relative",
@@ -189,10 +233,10 @@ export default function Summary() {
               <CircularProgress size={72} thickness={4} sx={{ color: ui.teal }} />
             </Box>
             <Typography variant="h5" color={ui.ink} fontWeight={800} gutterBottom>
-              Loading Summary
+              Loading summary
             </Typography>
             <Typography variant="body1" sx={{ color: ui.muted }}>
-              Please wait while we calculate the expenses...
+              Calculating who paid what…
             </Typography>
           </Paper>
         </Fade>
@@ -211,7 +255,7 @@ export default function Summary() {
           p: { xs: 2, sm: 3 },
         }}
       >
-        <Zoom in timeout={800}>
+        <Zoom in timeout={500}>
           <Paper
             elevation={0}
             sx={{
@@ -255,37 +299,52 @@ export default function Summary() {
             >
               {error}
             </Alert>
-            <Button
-              variant="contained"
-              disableElevation
-              onClick={() => navigate("/groups")}
-              sx={{
-                py: 1.6,
-                px: 4,
-                borderRadius: "999px",
-                fontWeight: 700,
-                textTransform: "none",
-                background: ui.ink,
-                color: "#fff",
-                boxShadow: "0 16px 30px -14px rgba(11,16,32,0.7)",
-                "&:hover": { background: ui.aurora, transform: "translateY(-2px)" },
-              }}
-            >
-              Back to Groups
-            </Button>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} justifyContent="center">
+              <Button
+                variant="contained"
+                disableElevation
+                startIcon={<Refresh />}
+                onClick={loadSummary}
+                sx={{
+                  py: 1.6,
+                  px: 4,
+                  borderRadius: "999px",
+                  fontWeight: 800,
+                  textTransform: "none",
+                  color: "#fff",
+                  background: ui.aurora,
+                  boxShadow: "0 18px 34px -16px rgba(99,102,241,0.85)",
+                  transition: "all 0.25s ease",
+                  "&:hover": { transform: "translateY(-2px)", filter: "brightness(1.07)" },
+                  ...focusRing,
+                  ...reduceMotion,
+                }}
+              >
+                Try again
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => navigate("/groups")}
+                sx={ghostBtn}
+              >
+                Back to groups
+              </Button>
+            </Stack>
           </Paper>
         </Zoom>
       </Box>
     );
 
   const balances = summaryData?.member_balances || [];
+  const totalNum = Number(summaryData?.total_amount) || 0;
+  const avgShare = balances.length ? totalNum / balances.length : 0;
 
   /* ---------- Main ---------- */
   return (
     <Box sx={{ ...pageSx, py: { xs: 3, sm: 4 } }}>
       <Container maxWidth="md" sx={{ position: "relative", zIndex: 1, pb: 12 }}>
         {/* Header */}
-        <Fade in timeout={800}>
+        <Fade in timeout={600}>
           <Box
             sx={{
               display: "flex",
@@ -305,12 +364,15 @@ export default function Summary() {
                 boxShadow: "0 14px 26px -10px rgba(11,16,32,0.6)",
                 transition: "all 0.3s ease",
                 "&:hover": { background: ui.aurora, transform: "translateX(-3px)" },
+                ...focusRing,
+                ...reduceMotion,
               }}
             >
               <ArrowBack />
             </IconButton>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
+                component="h1"
                 variant="h3"
                 sx={{
                   fontWeight: 800,
@@ -320,11 +382,17 @@ export default function Summary() {
                   fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
                 }}
               >
-                Expense Summary
+                Expense summary
               </Typography>
               <Typography
                 variant="h6"
-                sx={{ color: ui.muted, fontWeight: 600, mt: 0.5, fontSize: "1.05rem" }}
+                sx={{
+                  color: ui.muted,
+                  fontWeight: 600,
+                  mt: 0.5,
+                  fontSize: "1.05rem",
+                  wordBreak: "break-word",
+                }}
               >
                 {group?.name} • Financial overview
               </Typography>
@@ -336,7 +404,7 @@ export default function Summary() {
         </Fade>
 
         {/* Total amount */}
-        <Slide direction="up" in timeout={900}>
+        <Slide direction="up" in timeout={600}>
           <Box
             sx={{
               position: "relative",
@@ -374,28 +442,57 @@ export default function Summary() {
               <Box sx={iconTile(64)}>
                 <AccountBalance sx={{ fontSize: 32 }} />
               </Box>
-              <Box>
+              <Box sx={{ minWidth: 0 }}>
                 <Typography variant="body1" fontWeight={600} sx={{ opacity: 0.75 }}>
                   Total group expenses
                 </Typography>
                 <Typography
                   variant="h2"
+                  component="p"
                   fontWeight={800}
                   sx={{
                     letterSpacing: "-2px",
                     fontSize: { xs: "2.6rem", sm: "3.5rem" },
                     lineHeight: 1.1,
+                    wordBreak: "break-word",
                   }}
                 >
-                  ₹{summaryData?.total_amount || 0}
+                  ₹{money(summaryData?.total_amount || 0)}
                 </Typography>
               </Box>
             </Box>
+
+            {balances.length > 0 && (
+              <Stack
+                direction="row"
+                spacing={1.25}
+                useFlexGap
+                flexWrap="wrap"
+                sx={{ position: "relative", zIndex: 1, mt: 3 }}
+              >
+                <Chip
+                  label={`${balances.length} ${balances.length === 1 ? "member" : "members"}`}
+                  sx={{
+                    color: "#fff",
+                    fontWeight: 700,
+                    backgroundColor: "rgba(255,255,255,0.12)",
+                  }}
+                />
+                <Chip
+                  label={`₹${money(avgShare)} average share`}
+                  sx={{
+                    color: "#fff",
+                    fontWeight: 700,
+                    backgroundColor: "rgba(255,255,255,0.12)",
+                  }}
+                />
+              </Stack>
+            )}
           </Box>
         </Slide>
 
         {/* Member balances */}
-        <Fade in timeout={1100}>
+        <Fade in timeout={700}>
           <Card elevation={0} sx={{ ...cardSx, mb: 4 }}>
             <CardHeader
               sx={{ p: 3, pb: 2 }}
@@ -406,12 +503,13 @@ export default function Summary() {
               }
               title={
                 <Typography
+                  component="h2"
                   variant="h5"
                   fontWeight={800}
                   color={ui.ink}
                   sx={{ letterSpacing: "-0.5px" }}
                 >
-                  Member Balances
+                  Member balances
                 </Typography>
               }
               subheader={
@@ -427,20 +525,43 @@ export default function Summary() {
                   <Typography variant="h6" sx={{ color: ui.ink, fontWeight: 700 }} gutterBottom>
                     No balances yet
                   </Typography>
-                  <Typography variant="body2" sx={{ color: ui.muted }}>
+                  <Typography variant="body2" sx={{ color: ui.muted, mb: 2.5 }}>
                     Add an expense to see who owes what
                   </Typography>
+                  <Button
+                    variant="contained"
+                    disableElevation
+                    startIcon={<AddCircle />}
+                    onClick={() => navigate(`/groups/${groupId}/add-expense`)}
+                    sx={{
+                      py: 1.3,
+                      px: 3.5,
+                      borderRadius: "999px",
+                      fontWeight: 800,
+                      textTransform: "none",
+                      color: "#fff",
+                      background: ui.aurora,
+                      boxShadow: "0 18px 34px -16px rgba(99,102,241,0.85)",
+                      ...focusRing,
+                    }}
+                  >
+                    Add expense
+                  </Button>
                 </Box>
               ) : (
                 <Grid container spacing={2.5}>
                   {balances.map((member, index) => {
                     const [from, to] = accents[index % accents.length];
                     const net = parseFloat(member.net_balance);
-                    const isPositive = net >= 0;
+                    const status = balanceStatus(net);
 
                     return (
                       <Grid item xs={12} sm={6} key={member.id}>
-                        <Slide direction="right" in timeout={1000 + index * 200}>
+                        <Fade
+                          in
+                          timeout={500}
+                          style={{ transitionDelay: `${Math.min(index, 8) * 70}ms` }}
+                        >
                           <Card
                             elevation={0}
                             sx={{
@@ -450,7 +571,7 @@ export default function Summary() {
                               borderRadius: "22px",
                               backgroundColor: "#fff",
                               border: `1px solid ${ui.line}`,
-                              transition: "all 0.25s ease",
+                              transition: "transform 0.25s ease, box-shadow 0.25s ease",
                               "&::before": {
                                 content: '""',
                                 position: "absolute",
@@ -464,6 +585,7 @@ export default function Summary() {
                                 transform: "translateY(-4px)",
                                 boxShadow: `0 18px 34px -20px ${to}`,
                               },
+                              ...reduceMotion,
                             }}
                           >
                             <CardContent sx={{ p: 3, pl: 3.5 }}>
@@ -504,7 +626,7 @@ export default function Summary() {
                                   </Typography>
                                   <Chip
                                     icon={<TrendingUp sx={{ color: "#047857 !important" }} />}
-                                    label={`₹${member.paid}`}
+                                    label={`₹${money(member.paid)}`}
                                     size="small"
                                     sx={{
                                       backgroundColor: "#ECFDF5",
@@ -526,7 +648,7 @@ export default function Summary() {
                                   </Typography>
                                   <Chip
                                     icon={<TrendingDown sx={{ color: "#BE123C !important" }} />}
-                                    label={`₹${member.owes}`}
+                                    label={`₹${money(member.owes)}`}
                                     size="small"
                                     sx={{
                                       backgroundColor: "#FFF1F2",
@@ -541,30 +663,46 @@ export default function Summary() {
                                     mt: 0.5,
                                     p: 1.75,
                                     borderRadius: "16px",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
                                     backgroundColor: "rgba(241,245,249,0.8)",
                                   }}
                                 >
-                                  <Typography variant="body1" fontWeight={700} color={ui.ink}>
-                                    Net balance
-                                  </Typography>
-                                  <Typography
-                                    variant="h6"
-                                    fontWeight={800}
+                                  <Box
                                     sx={{
-                                      letterSpacing: "-0.5px",
-                                      color: isPositive ? ui.positive : ui.negative,
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      alignItems: "center",
+                                      gap: 1,
                                     }}
                                   >
-                                    ₹{member.net_balance}
-                                  </Typography>
+                                    <Typography variant="body1" fontWeight={700} color={ui.ink}>
+                                      Net balance
+                                    </Typography>
+                                    <Typography
+                                      variant="h6"
+                                      fontWeight={800}
+                                      sx={{
+                                        letterSpacing: "-0.5px",
+                                        color: status.color,
+                                      }}
+                                    >
+                                      {signedMoney(member.net_balance)}
+                                    </Typography>
+                                  </Box>
+                                  <Chip
+                                    label={status.label}
+                                    size="small"
+                                    sx={{
+                                      mt: 1,
+                                      fontWeight: 800,
+                                      color: status.color,
+                                      backgroundColor: status.bg,
+                                    }}
+                                  />
                                 </Box>
                               </Stack>
                             </CardContent>
                           </Card>
-                        </Slide>
+                        </Fade>
                       </Grid>
                     );
                   })}
@@ -575,15 +713,16 @@ export default function Summary() {
         </Fade>
 
         {/* Quick actions */}
-        <Fade in timeout={1400}>
+        <Fade in timeout={800}>
           <Paper elevation={0} sx={{ ...cardSx, p: { xs: 3, sm: 4 } }}>
             <Typography
+              component="h2"
               variant="h6"
               fontWeight={800}
               gutterBottom
               sx={{ mb: 3, color: ui.ink, letterSpacing: "-0.3px" }}
             >
-              Quick Actions
+              Quick actions
             </Typography>
 
             <Stack
@@ -598,7 +737,7 @@ export default function Summary() {
                 onClick={() => navigate(`/groups/${groupId}/add-expense`)}
                 sx={ghostBtn}
               >
-                Add New Expense
+                Add expense
               </Button>
 
               <Button
@@ -608,7 +747,7 @@ export default function Summary() {
                 onClick={() => navigate(`/groups/${groupId}/add-members`)}
                 sx={ghostBtn}
               >
-                Manage Members
+                Manage members
               </Button>
 
               <Button
@@ -631,9 +770,11 @@ export default function Summary() {
                     transform: "translateY(-2px)",
                     filter: "brightness(1.07)",
                   },
+                  ...focusRing,
+                  ...reduceMotion,
                 }}
               >
-                All Groups
+                All groups
               </Button>
             </Stack>
           </Paper>

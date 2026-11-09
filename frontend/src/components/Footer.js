@@ -11,123 +11,82 @@
 import { Box, Typography, Link } from "@mui/material";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 
+const display = "'Bricolage Grotesque', 'Inter', system-ui, sans-serif";
+
 export default function Footer() {
   return (
     <Box
       component="footer"
       sx={{
-        backgroundColor: "transparent",
-        color: "#64748B",
-        py: 1.5,
-        px: 2,
         position: "fixed",
         bottom: 0,
         left: 0,
         width: "100%",
         zIndex: 1000,
-        pointerEvents: "none", // never blocks clicks on the page underneath
+        px: 2,
+        py: 1.25,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexWrap: "wrap",
+        columnGap: 1.75,
+        rowGap: 0.75,
+        color: "#475569",
+        backgroundColor: "rgba(248,250,252,0.94)",
+        backdropFilter: "blur(10px)",
+        WebkitBackdropFilter: "blur(10px)",
+        borderTop: "1px solid rgba(15,23,42,0.08)",
       }}
     >
-      {/* Edge-fade so the scrolling text glides in and out softly */}
-      <Box
-        sx={{
-          overflow: "hidden",
-          WebkitMaskImage:
-            "linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent)",
-          maskImage:
-            "linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent)",
-        }}
-      >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box
+          component="span"
+          aria-hidden
+          sx={{
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #14B8A6, #8B5CF6)",
+          }}
+        />
         <Typography
           variant="body2"
           sx={{
-            fontFamily: "'Inter', sans-serif",
+            fontFamily: display,
             fontWeight: 600,
-            letterSpacing: "0.2px",
-            whiteSpace: "nowrap",
-            display: "inline-flex",
-            alignItems: "center",
-            animation: "marquee 45s linear infinite", // slowed down
-            "@keyframes marquee": {
-              from: { transform: "translateX(-100%)" },
-              to: { transform: "translateX(100vw)" },
-            },
+            fontSize: "0.85rem",
+            textAlign: "center",
           }}
         >
-          {/* Pulsing live dot */}
-          <Box
-            component="span"
-            sx={{
-              width: 8,
-              height: 8,
-              mr: 1.5,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #14B8A6, #8B5CF6)",
-              boxShadow: "0 0 0 0 rgba(20,184,166,0.6)",
-              animation: "dotPulse 2s ease-out infinite",
-              "@keyframes dotPulse": {
-                "0%": { boxShadow: "0 0 0 0 rgba(20,184,166,0.55)" },
-                "100%": { boxShadow: "0 0 0 10px rgba(20,184,166,0)" },
-              },
-            }}
-          />
-          © Bharadwaj — All Rights Reserved •{" "}
-          <Link
-            href="https://www.youtube.com/@code-with-Bharadwaj"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="none"
-            sx={{
-              pointerEvents: "auto",
-              position: "relative",
-              overflow: "hidden",
-              display: "inline-flex",
-              alignItems: "center",
-              color: "#fff",
-              fontWeight: 700,
-              ml: 1.5,
-              px: 1.75,
-              py: 0.5,
-              borderRadius: "999px",
-              "@keyframes ringSpin": {
-                from: { transform: "rotate(0deg)" },
-                to: { transform: "rotate(360deg)" },
-              },
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                inset: "-150%",
-                background:
-                  "conic-gradient(from 0deg, #14B8A6, #3B82F6, #8B5CF6, #F43F5E, #F59E0B, #14B8A6)",
-                animation: "ringSpin 4s linear infinite",
-              },
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                inset: "1.5px",
-                borderRadius: "inherit",
-                backgroundColor: "#0B1020",
-                transition: "background-color 0.3s ease",
-              },
-              "&:hover::after": { backgroundColor: "#151B33" },
-            }}
-          >
-            <Box
-              component="span"
-              sx={{
-                position: "relative",
-                zIndex: 1,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 0.75,
-              }}
-            >
-              <YouTubeIcon sx={{ fontSize: 18, color: "#FB7185" }} />
-              Bharadwaj
-            </Box>
-          </Link>
+          © Bharadwaj — All Rights Reserved
         </Typography>
       </Box>
+
+      <Link
+        href="https://www.youtube.com/@code-with-Bharadwaj"
+        target="_blank"
+        rel="noopener noreferrer"
+        underline="none"
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 0.75,
+          px: 1.75,
+          py: 0.5,
+          borderRadius: "999px",
+          color: "#fff",
+          backgroundColor: "#0B1020",
+          fontFamily: display,
+          fontWeight: 700,
+          fontSize: "0.85rem",
+          transition: "background-color 0.2s ease",
+          "&:hover": { backgroundColor: "#1E2A4A" },
+          "&:focus-visible": { outline: "2px solid #3B82F6", outlineOffset: 3 },
+        }}
+      >
+        <YouTubeIcon sx={{ fontSize: 18, color: "#FB7185" }} />
+        Bharadwaj
+      </Link>
     </Box>
   );
 }
