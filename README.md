@@ -31,9 +31,8 @@ It supports two ways of splitting:
 
 | Service  | Platform          | URL                                      |
 |----------|-------------------|------------------------------------------|
-| Frontend | Vercel            | https://your-app.vercel.app              |
-| Backend  | Render            | https://your-api.onrender.com            |
-| Database | Neon (PostgreSQL) | Managed, serverless                      |
+| Fullstack | Vercel            | https://manu-bharadwaj-expense-splitter.vercel.app/          |
+
 
 > ⏳ **Note:** The backend runs on Render's free tier, so the first request after a period of inactivity can take 30-60 seconds while the server wakes up.
 
