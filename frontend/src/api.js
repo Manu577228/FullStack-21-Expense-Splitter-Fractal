@@ -12,7 +12,7 @@
 const BASE_URL =
   process.env.REACT_APP_API_URL ||
   (process.env.NODE_ENV === "production"
-    ? "https://manubharadwaj.pythonanywhere.com"
+    ? "https://expense-splitter-backend-w4kp.onrender.com"
     : "http://127.0.0.1:8000");
 
 // Wrapper around fetch with auth support

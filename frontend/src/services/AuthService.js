@@ -1,9 +1,10 @@
 // src/services/AuthService.js
 const API_BASE =
-  process.env.REACT_APP_API_URL ||
-  (process.env.NODE_ENV === "production"
-    ? "https://manubharadwaj.pythonanywhere.com/api/"
-    : "http://localhost:8000/api/");
+  process.env.REACT_APP_API_URL
+    ? `${process.env.REACT_APP_API_URL.replace(/\/$/, "")}/api/`
+    : (process.env.NODE_ENV === "production"
+        ? "https://expense-splitter-backend-w4kp.onrender.com/api/"
+        : "http://localhost:8000/api/");
 
 // Login user
 export async function login(credentials) {
