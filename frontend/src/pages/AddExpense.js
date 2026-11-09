@@ -1,12 +1,17 @@
-/* ----------------------------------------------------------------------------*/
-/*   ( The Authentic JS/JAVA/PYTHON CodeBuff )
+
+/* ----------------------------------------------------------------------------  */
+/*   ( The Authentic JAVA/Python/JS CodeBuff )
  ___ _                      _              _ 
  | _ ) |_  __ _ _ _ __ _ __| |_ __ ____ _ (_)
  | _ \ ' \/ _` | '_/ _` / _` \ V  V / _` || |
- |___/_||_\__,_|_| \__,_\__,_|\_/\_/\__,_|/ |
+ |___/_||_\__,_|_| \__,_\__,_|_/\_/\__,_|/ |
                                         |__/ 
  */
-/* --------------------------------------------------------------------------*/
+/* --------------------------------------------------------------------------   */
+/*    Youtube: https://youtube.com/@code-with-Bharadwaj                        */
+/*    Github : https://github.com/Manu577228                                  */
+/*    Portfolio : https://manu-bharadwaj-portfolio.vercel.app/portfolio      */
+/* -----------------------------------------------------------------------  */
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -44,7 +49,8 @@ const ui = {
   line: "rgba(15,23,42,0.09)",
   teal: "#14B8A6",
   blue: "#3B82F6",
-  aurora: "linear-gradient(135deg, #14B8A6 0%, #3B82F6 50%, #8B5CF6 100%)",
+  aurora:
+    "linear-gradient(135deg, #14B8A6 0%, #3B82F6 50%, #8B5CF6 100%)",
 };
 
 const display = "'Bricolage Grotesque', 'Inter', system-ui, sans-serif";
@@ -58,7 +64,7 @@ const accents = [
   ["#6366F1", "#8B5CF6"],
 ];
 
-/* Page: pale paper with a faint dot grid and two soft aurora glows */
+/* Page styling */
 const pageSx = {
   position: "relative",
   overflow: "hidden",
@@ -75,7 +81,8 @@ const pageSx = {
     width: 520,
     height: 520,
     borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(20,184,166,0.22), transparent 65%)",
+    background:
+      "radial-gradient(circle, rgba(20,184,166,0.22), transparent 65%)",
     pointerEvents: "none",
   },
   "&::after": {
@@ -86,12 +93,13 @@ const pageSx = {
     width: 560,
     height: 560,
     borderRadius: "50%",
-    background: "radial-gradient(circle, rgba(139,92,246,0.20), transparent 65%)",
+    background:
+      "radial-gradient(circle, rgba(139,92,246,0.20), transparent 65%)",
     pointerEvents: "none",
   },
 };
 
-/* Generic card used for loading / warning states */
+/* Generic card */
 const cardSx = {
   borderRadius: "28px",
   backgroundColor: "rgba(255,255,255,0.92)",
@@ -100,9 +108,13 @@ const cardSx = {
     "0 30px 70px -30px rgba(59,130,246,0.35), 0 2px 8px rgba(15,23,42,0.04)",
 };
 
-/* The main form is a receipt: its bottom edge is torn into teeth */
+/* Receipt styling */
 const TOOTH = 22;
-const receiptMask = `linear-gradient(#000 0 0) top / 100% calc(100% - ${TOOTH / 2}px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / ${TOOTH}px ${TOOTH / 2}px repeat-x`;
+const receiptMask = `linear-gradient(#000 0 0) top / 100% calc(100% - ${
+  TOOTH / 2
+}px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / ${TOOTH}px ${
+  TOOTH / 2
+}px repeat-x`;
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
@@ -117,9 +129,15 @@ const fieldSx = {
       backgroundColor: "#fff",
       boxShadow: "0 0 0 4px rgba(20,184,166,0.16)",
     },
-    "&.Mui-focused fieldset": { borderColor: ui.teal, borderWidth: 2 },
+    "&.Mui-focused fieldset": {
+      borderColor: ui.teal,
+      borderWidth: 2,
+    },
   },
-  "& .MuiInputLabel-root": { fontFamily: display, fontWeight: 600 },
+  "& .MuiInputLabel-root": {
+    fontFamily: display,
+    fontWeight: 600,
+  },
   "& .MuiInputLabel-root.Mui-focused": { color: ui.ink },
   "& input[type=number]": { MozAppearance: "textfield" },
   "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
@@ -161,7 +179,7 @@ const alertBase = {
   alignItems: "center",
 };
 
-/* Ticket geometry for custom-split rows (matches ExpenseSplitField) */
+/* Custom split ticket styling */
 const STUB = 72;
 const ticketMask = `radial-gradient(circle 9px at ${STUB}px 0, #0000 97%, #000), radial-gradient(circle 9px at ${STUB}px 100%, #0000 97%, #000)`;
 
@@ -201,43 +219,79 @@ export default function AddExpense() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // FIX: Keep loadGroupData inside useEffect.
+  // This avoids the missing dependency ESLint warning.
   useEffect(() => {
-    loadGroupData();
-  }, [groupId]);
+    let isMounted = true;
 
-  const loadGroupData = async () => {
-    try {
-      const gRes = await apiFetch(`/api/groups/${groupId}/`);
-      if (!gRes?.ok) throw new Error("Failed to load group");
-      setGroup(await gRes.json());
+    const loadGroupData = async () => {
+      try {
+        const gRes = await apiFetch(`/api/groups/${groupId}/`);
 
-      const mRes = await apiFetch(`/api/groups/${groupId}/members/`);
-      if (!mRes?.ok) throw new Error("Failed to load members");
-      const mData = await mRes.json();
-      setMembers(mData.members);
+        if (!gRes?.ok) {
+          throw new Error("Failed to load group");
+        }
 
-      if (mData.members.length > 0) {
-        setPaidBy(mData.members[0].username);
-        const splits = {};
-        mData.members.forEach((m) => (splits[m.username] = ""));
-        setCustomSplits(splits);
+        const groupData = await gRes.json();
+
+        if (!isMounted) return;
+
+        setGroup(groupData);
+
+        const mRes = await apiFetch(
+          `/api/groups/${groupId}/members/`
+        );
+
+        if (!mRes?.ok) {
+          throw new Error("Failed to load members");
+        }
+
+        const mData = await mRes.json();
+
+        if (!isMounted) return;
+
+        setMembers(mData.members);
+
+        if (mData.members.length > 0) {
+          setPaidBy(mData.members[0].username);
+
+          const splits = {};
+
+          mData.members.forEach((m) => {
+            splits[m.username] = "";
+          });
+
+          setCustomSplits(splits);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError("Error loading group data: " + err.message);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-    } catch (err) {
-      setError("Error loading group data: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadGroupData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [groupId]);
 
   const handleAddExpense = async () => {
     if (!description.trim() || !amount || !paidBy) {
       setError("Please fill all fields");
       return;
     }
+
     if (parseFloat(amount) <= 0) {
       setError("Amount must be greater than 0");
       return;
     }
+
     if (splitType === "custom") {
       for (let key in customSplits) {
         if (parseFloat(customSplits[key] || 0) < 0) {
@@ -248,18 +302,25 @@ export default function AddExpense() {
     }
 
     setSubmitting(true);
+
     try {
-      const res = await apiFetch(`/api/groups/${groupId}/add-expense/`, {
-        method: "POST",
-        body: JSON.stringify({
-          description,
-          amount: parseFloat(amount),
-          paid_by_username: paidBy,
-          split_type: splitType,
-          custom_splits: splitType === "custom" ? customSplits : {},
-        }),
-      });
+      const res = await apiFetch(
+        `/api/groups/${groupId}/add-expense/`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            description,
+            amount: parseFloat(amount),
+            paid_by_username: paidBy,
+            split_type: splitType,
+            custom_splits:
+              splitType === "custom" ? customSplits : {},
+          }),
+        }
+      );
+
       const data = await res.json();
+
       if (res?.ok) {
         setSuccess("Expense added!");
         setTimeout(() => navigate(`/summary/${groupId}`), 1200);
@@ -273,10 +334,19 @@ export default function AddExpense() {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
       <Box sx={pageSx}>
-        <Container maxWidth="sm" sx={{ position: "relative", zIndex: 1, mt: 6, textAlign: "center", pb: 10 }}>
+        <Container
+          maxWidth="sm"
+          sx={{
+            position: "relative",
+            zIndex: 1,
+            mt: 6,
+            textAlign: "center",
+            pb: 10,
+          }}
+        >
           <Box
             sx={{
               minHeight: "70vh",
@@ -287,11 +357,25 @@ export default function AddExpense() {
           >
             <Paper
               elevation={0}
-              sx={{ ...cardSx, p: 5, textAlign: "center", minWidth: 260 }}
+              sx={{
+                ...cardSx,
+                p: 5,
+                textAlign: "center",
+                minWidth: 260,
+              }}
             >
-              <CircularProgress size={46} thickness={4} sx={{ color: ui.teal, mb: 2 }} />
+              <CircularProgress
+                size={46}
+                thickness={4}
+                sx={{ color: ui.teal, mb: 2 }}
+              />
               <Typography
-                sx={{ mt: 2, color: ui.ink, fontFamily: display, fontWeight: 700 }}
+                sx={{
+                  mt: 2,
+                  color: ui.ink,
+                  fontFamily: display,
+                  fontWeight: 700,
+                }}
               >
                 Loading group...
               </Typography>
@@ -300,11 +384,20 @@ export default function AddExpense() {
         </Container>
       </Box>
     );
+  }
 
-  if (!group || members.length < 2)
+  if (!group || members.length < 2) {
     return (
       <Box sx={pageSx}>
-        <Container maxWidth="sm" sx={{ position: "relative", zIndex: 1, mt: 6, pb: 10 }}>
+        <Container
+          maxWidth="sm"
+          sx={{
+            position: "relative",
+            zIndex: 1,
+            mt: 6,
+            pb: 10,
+          }}
+        >
           <Box
             sx={{
               minHeight: "70vh",
@@ -313,7 +406,14 @@ export default function AddExpense() {
               justifyContent: "center",
             }}
           >
-            <Paper elevation={0} sx={{ ...cardSx, p: 4, textAlign: "center" }}>
+            <Paper
+              elevation={0}
+              sx={{
+                ...cardSx,
+                p: 4,
+                textAlign: "center",
+              }}
+            >
               <Alert
                 severity="warning"
                 sx={{
@@ -326,8 +426,11 @@ export default function AddExpense() {
               >
                 Need at least 2 members to add expenses.
               </Alert>
+
               <Button
-                onClick={() => navigate(`/groups/${groupId}/add-members`)}
+                onClick={() =>
+                  navigate(`/groups/${groupId}/add-members`)
+                }
                 startIcon={<ArrowBackRoundedIcon />}
                 sx={{
                   background: ui.ink,
@@ -338,7 +441,8 @@ export default function AddExpense() {
                   fontFamily: display,
                   fontWeight: 700,
                   textTransform: "none",
-                  boxShadow: "0 14px 26px -12px rgba(11,16,32,0.7)",
+                  boxShadow:
+                    "0 14px 26px -12px rgba(11,16,32,0.7)",
                   "&:hover": { background: ui.aurora },
                   "&:focus-visible": focusRing,
                 }}
@@ -350,38 +454,68 @@ export default function AddExpense() {
         </Container>
       </Box>
     );
+  }
 
-  /* Read-only numbers used only to draw the split bar and share labels */
+  /* Split calculations */
   const splitAmt = (username) =>
     Math.max(0, parseFloat(customSplits[username]) || 0);
-  const allocated = members.reduce((sum, m) => sum + splitAmt(m.username), 0);
+
+  const allocated = members.reduce(
+    (sum, m) => sum + splitAmt(m.username),
+    0
+  );
+
   const shareOf = (username) =>
-    allocated > 0 ? Math.round((splitAmt(username) / allocated) * 100) : 0;
+    allocated > 0
+      ? Math.round((splitAmt(username) / allocated) * 100)
+      : 0;
+
   const allocatedLabel = allocated.toLocaleString(undefined, {
     maximumFractionDigits: 2,
   });
 
   return (
     <Box sx={{ ...pageSx, py: { xs: 3, sm: 4 } }}>
-      <Container maxWidth="sm" sx={{ position: "relative", zIndex: 1, pb: 12 }}>
+      <Container
+        maxWidth="sm"
+        sx={{
+          position: "relative",
+          zIndex: 1,
+          pb: 12,
+        }}
+      >
         {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            mb: 4,
+          }}
+        >
           <IconButton
             aria-label="Back"
-            onClick={() => navigate(`/groups/${groupId}/add-members`)}
+            onClick={() =>
+              navigate(`/groups/${groupId}/add-members`)
+            }
             sx={{
               width: 46,
               height: 46,
               background: ui.ink,
               color: "#fff",
-              boxShadow: "0 14px 26px -10px rgba(11,16,32,0.6)",
+              boxShadow:
+                "0 14px 26px -10px rgba(11,16,32,0.6)",
               transition: "all 0.3s ease",
-              "&:hover": { background: ui.aurora, transform: "translateX(-3px)" },
+              "&:hover": {
+                background: ui.aurora,
+                transform: "translateX(-3px)",
+              },
               "&:focus-visible": focusRing,
             }}
           >
             <ArrowBackRoundedIcon />
           </IconButton>
+
           <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="h4"
@@ -396,6 +530,7 @@ export default function AddExpense() {
             >
               Add Expense
             </Typography>
+
             <Box
               sx={{
                 display: "inline-flex",
@@ -414,7 +549,10 @@ export default function AddExpense() {
               <Typography
                 variant="body2"
                 noWrap
-                sx={{ fontFamily: display, fontWeight: 700 }}
+                sx={{
+                  fontFamily: display,
+                  fontWeight: 700,
+                }}
               >
                 {group?.name}
               </Typography>
@@ -452,10 +590,11 @@ export default function AddExpense() {
           </Alert>
         )}
 
-        {/* Receipt: the outer box carries the shadow, the paper is torn at the bottom */}
+        {/* Receipt */}
         <Box
           sx={{
-            filter: "drop-shadow(0 28px 34px rgba(59,130,246,0.22)) drop-shadow(0 2px 3px rgba(15,23,42,0.06))",
+            filter:
+              "drop-shadow(0 28px 34px rgba(59,130,246,0.22)) drop-shadow(0 2px 3px rgba(15,23,42,0.06))",
           }}
         >
           <Paper
@@ -471,7 +610,9 @@ export default function AddExpense() {
               mask: receiptMask,
             }}
           >
-            <SectionTitle icon={<ReceiptLongRoundedIcon sx={{ fontSize: 20 }} />}>
+            <SectionTitle
+              icon={<ReceiptLongRoundedIcon sx={{ fontSize: 20 }} />}
+            >
               Expense Details
             </SectionTitle>
 
@@ -491,7 +632,6 @@ export default function AddExpense() {
               sx={{ ...fieldSx, mb: 3 }}
             />
 
-            {/* The amount is the hero of the form, so it is set large */}
             <TextField
               label="Amount"
               fullWidth
@@ -540,7 +680,8 @@ export default function AddExpense() {
                       p: 0.5,
                       borderRadius: "18px",
                       border: `1px solid ${ui.line}`,
-                      boxShadow: "0 24px 50px -20px rgba(15,23,42,0.35)",
+                      boxShadow:
+                        "0 24px 50px -20px rgba(15,23,42,0.35)",
                       "& .MuiMenuItem-root": {
                         borderRadius: "12px",
                         fontFamily: display,
@@ -559,7 +700,6 @@ export default function AddExpense() {
               ))}
             </TextField>
 
-            {/* Tear line */}
             <Divider
               sx={{
                 my: 4,
@@ -569,11 +709,12 @@ export default function AddExpense() {
               }}
             />
 
-            <SectionTitle icon={<TuneRoundedIcon sx={{ fontSize: 20 }} />}>
+            <SectionTitle
+              icon={<TuneRoundedIcon sx={{ fontSize: 20 }} />}
+            >
               Split Type
             </SectionTitle>
 
-            {/* Segmented control: the dark thumb slides to the chosen option */}
             <ToggleButtonGroup
               value={splitType}
               exclusive
@@ -594,10 +735,14 @@ export default function AddExpense() {
                   width: "calc(50% - 4px)",
                   borderRadius: "999px",
                   background: ui.ink,
-                  boxShadow: "0 12px 22px -10px rgba(11,16,32,0.7)",
+                  boxShadow:
+                    "0 12px 22px -10px rgba(11,16,32,0.7)",
                   transform:
-                    splitType === "custom" ? "translateX(100%)" : "translateX(0)",
-                  transition: "transform 0.4s cubic-bezier(.65,0,.35,1)",
+                    splitType === "custom"
+                      ? "translateX(100%)"
+                      : "translateX(0)",
+                  transition:
+                    "transform 0.4s cubic-bezier(.65,0,.35,1)",
                 },
                 "@media (prefers-reduced-motion: reduce)": {
                   "&::before": { transition: "none" },
@@ -616,7 +761,10 @@ export default function AddExpense() {
                   borderRadius: "999px !important",
                   backgroundColor: "transparent",
                   transition: "color 0.25s ease",
-                  "&:hover": { backgroundColor: "transparent", color: ui.ink },
+                  "&:hover": {
+                    backgroundColor: "transparent",
+                    color: ui.ink,
+                  },
                   "&.Mui-selected": {
                     color: "#fff",
                     backgroundColor: "transparent",
@@ -633,6 +781,7 @@ export default function AddExpense() {
                 <PeopleAltRoundedIcon sx={{ fontSize: 20 }} />
                 Equal Split
               </ToggleButton>
+
               <ToggleButton value="custom">
                 <TuneRoundedIcon sx={{ fontSize: 20 }} />
                 Custom Split
@@ -641,7 +790,13 @@ export default function AddExpense() {
 
             {splitType === "custom" && (
               <Box sx={{ mb: 1 }}>
-                <Box sx={{ display: "flex", alignItems: "flex-end", mb: 1.5 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "flex-end",
+                    mb: 1.5,
+                  }}
+                >
                   <Typography
                     variant="subtitle1"
                     sx={{
@@ -654,6 +809,7 @@ export default function AddExpense() {
                   >
                     Custom Amounts
                   </Typography>
+
                   <Typography
                     sx={{
                       fontFamily: display,
@@ -668,7 +824,6 @@ export default function AddExpense() {
                   </Typography>
                 </Box>
 
-                {/* Split bar: one segment per member, sized by their share */}
                 <Box
                   role="img"
                   aria-label="Share of each member in the split"
@@ -688,8 +843,12 @@ export default function AddExpense() {
                 >
                   {members.map((m, index) => {
                     const amt = splitAmt(m.username);
+
                     if (amt <= 0) return null;
-                    const [from, to] = accents[index % accents.length];
+
+                    const [from, to] =
+                      accents[index % accents.length];
+
                     return (
                       <Box
                         key={m.id}
@@ -699,7 +858,8 @@ export default function AddExpense() {
                           minWidth: 0,
                           borderRadius: "999px",
                           background: `linear-gradient(90deg, ${from}, ${to})`,
-                          transition: "flex-grow 0.55s cubic-bezier(.65,0,.35,1)",
+                          transition:
+                            "flex-grow 0.55s cubic-bezier(.65,0,.35,1)",
                         }}
                       />
                     );
@@ -707,15 +867,20 @@ export default function AddExpense() {
                 </Box>
 
                 {members.map((m, index) => {
-                  const [from, to] = accents[index % accents.length];
+                  const [from, to] =
+                    accents[index % accents.length];
+
                   const pct = shareOf(m.username);
+
                   return (
                     <Box
                       key={m.id}
                       sx={{
                         mb: 1.75,
-                        filter: "drop-shadow(0 1px 1px rgba(15,23,42,0.07))",
-                        transition: "transform 0.25s ease, filter 0.25s ease",
+                        filter:
+                          "drop-shadow(0 1px 1px rgba(15,23,42,0.07))",
+                        transition:
+                          "transform 0.25s ease, filter 0.25s ease",
                         "&:hover, &:focus-within": {
                           transform: "translateY(-2px)",
                           filter: `drop-shadow(0 14px 14px ${to}45)`,
@@ -771,7 +936,8 @@ export default function AddExpense() {
                             top: 14,
                             bottom: 14,
                             left: STUB - 2,
-                            borderLeft: "2px dashed rgba(15,23,42,0.16)",
+                            borderLeft:
+                              "2px dashed rgba(15,23,42,0.16)",
                           }}
                         />
 
@@ -816,6 +982,7 @@ export default function AddExpense() {
                             sx={fieldSx}
                             fullWidth
                           />
+
                           <Typography
                             sx={{
                               width: 42,
@@ -839,7 +1006,13 @@ export default function AddExpense() {
               </Box>
             )}
 
-            <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end" }}>
+            <Box
+              sx={{
+                mt: 4,
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
               <Button
                 variant="contained"
                 onClick={handleAddExpense}
@@ -848,7 +1021,11 @@ export default function AddExpense() {
                 disableElevation
                 startIcon={
                   submitting ? (
-                    <CircularProgress size={20} thickness={5} sx={{ color: "#fff" }} />
+                    <CircularProgress
+                      size={20}
+                      thickness={5}
+                      sx={{ color: "#fff" }}
+                    />
                   ) : (
                     <AddRoundedIcon />
                   )
@@ -864,15 +1041,21 @@ export default function AddExpense() {
                   color: "#fff",
                   background: ui.aurora,
                   backgroundSize: "200% 200%",
-                  boxShadow: "0 22px 40px -16px rgba(99,102,241,0.85)",
+                  boxShadow:
+                    "0 22px 40px -16px rgba(99,102,241,0.85)",
                   transition: "all 0.3s ease",
                   "&:hover": {
                     backgroundPosition: "100% 50%",
                     transform: "translateY(-2px)",
-                    boxShadow: "0 28px 46px -16px rgba(99,102,241,0.95)",
+                    boxShadow:
+                      "0 28px 46px -16px rgba(99,102,241,0.95)",
                   },
                   "&:focus-visible": focusRing,
-                  "&.Mui-disabled": { color: "#fff", opacity: 0.75, background: ui.aurora },
+                  "&.Mui-disabled": {
+                    color: "#fff",
+                    opacity: 0.75,
+                    background: ui.aurora,
+                  },
                 }}
               >
                 {submitting ? "Adding..." : "Add Expense"}
