@@ -1,29 +1,50 @@
+
 # ----------------------------------------------------------------------------
 #   ( The Authentic JS/JAVA/PYTHON CodeBuff )
 #  ___ _                      _              _ 
 #  | _ ) |_  __ _ _ _ __ _ __| |_ __ ____ _ (_)
 #  | _ \ ' \/ _` | '_/ _` / _` \ V  V / _` || |
-#  |___/_||_\__,_|_| \__,_\__,_|\_/\_/\__,_|/ |
+#  |___/_||_\__,_|_| \__,_\__,_|_/\_/\__,_|/ |
 #                                         |__/
 # ----------------------------------------------------------------------------
 
 from pathlib import Path
 from datetime import timedelta
 import os
+import dj_database_url
+
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-prod")
-DEBUG = False
+
+# ----------------------------------------------------------------------------
+# SECURITY SETTINGS
+# ----------------------------------------------------------------------------
+
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-local-development-key-123456"
+    else:
+        raise ImproperlyConfigured(
+            "SECRET_KEY environment variable must be set in production."
+        )
 
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
-    "ManuBharadwaj.pythonanywhere.com",
+    ".onrender.com",
 ]
 
-# Applications
+
+# ----------------------------------------------------------------------------
+# INSTALLED APPLICATIONS
+# ----------------------------------------------------------------------------
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -32,21 +53,29 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # Third-party
+    # Third-party applications
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
 
-    # Local apps
+    # Local applications
     "users",
     "expenses",
     "groups",
 ]
 
-# Middleware
+
+# ----------------------------------------------------------------------------
+# MIDDLEWARE
+# ----------------------------------------------------------------------------
+
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
+    "corsheaders.middleware.CorsMiddleware",
+
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -55,7 +84,17 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
+# ----------------------------------------------------------------------------
+# URL CONFIGURATION
+# ----------------------------------------------------------------------------
+
 ROOT_URLCONF = "backend.urls"
+
+
+# ----------------------------------------------------------------------------
+# TEMPLATES
+# ----------------------------------------------------------------------------
 
 TEMPLATES = [
     {
@@ -73,46 +112,116 @@ TEMPLATES = [
     },
 ]
 
+
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# Database (SQLite ONLY for PythonAnywhere free)
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
 
-# Password validation
+# ----------------------------------------------------------------------------
+# DATABASE CONFIGURATION
+# SQLite for local development
+# PostgreSQL for Render using DATABASE_URL
+# ----------------------------------------------------------------------------
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
+
+
+# ----------------------------------------------------------------------------
+# PASSWORD VALIDATION
+# ----------------------------------------------------------------------------
+
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
-# Localization
+
+# ----------------------------------------------------------------------------
+# INTERNATIONALIZATION
+# ----------------------------------------------------------------------------
+
 LANGUAGE_CODE = "en-us"
+
 TIME_ZONE = "UTC"
+
 USE_I18N = True
+
 USE_TZ = True
 
-# Static files
+
+# ----------------------------------------------------------------------------
+# STATIC FILES CONFIGURATION
+# ----------------------------------------------------------------------------
+
 STATIC_URL = "/static/"
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Media files
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+
+# ----------------------------------------------------------------------------
+# MEDIA FILES
+# ----------------------------------------------------------------------------
+
 MEDIA_URL = "/media/"
+
 MEDIA_ROOT = BASE_DIR / "media"
+
+
+# ----------------------------------------------------------------------------
+# DEFAULT PRIMARY KEY
+# ----------------------------------------------------------------------------
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Django REST Framework + JWT
+
+# ----------------------------------------------------------------------------
+# DJANGO REST FRAMEWORK
+# ----------------------------------------------------------------------------
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     )
 }
+
+
+# ----------------------------------------------------------------------------
+# JWT CONFIGURATION
+# ----------------------------------------------------------------------------
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -120,18 +229,29 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-# CORS
+
+# ----------------------------------------------------------------------------
+# CORS CONFIGURATION
+# ----------------------------------------------------------------------------
+
 CORS_ALLOWED_ORIGINS = [
-    "https://expense-splitter-fractal-manu-bharadwaj.vercel.app",
     "http://localhost:3000",
-    "https://ManuBharadwaj.pythonanywhere.com",
+    "http://127.0.0.1:3000",
+    "https://expense-splitter-fractal-manu-bharadwaj.vercel.app",
 ]
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://.*\.vercel\.app$",
 ]
 
-CORS_ALLOW_HEADERS = [
-    "content-type",
-    "authorization",
+
+# ----------------------------------------------------------------------------
+# CSRF CONFIGURATION
+# ----------------------------------------------------------------------------
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://*.onrender.com",
+    "https://*.vercel.app",
 ]

@@ -18,3 +18,4 @@ backend/db.sqlite3
 
 # Django generated files
 backend/staticfiles/
+/backend/venv/
