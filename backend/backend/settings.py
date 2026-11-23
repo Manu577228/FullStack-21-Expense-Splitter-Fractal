@@ -10,12 +10,14 @@
 
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
 import os
 import dj_database_url
 
 from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
 
 # ----------------------------------------------------------------------------
@@ -255,4 +257,22 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.vercel.app",
 ]
 
-KAFKA_BOOTSTRAP = "localhost:9092"
+
+# ----------------------------------------------------------------------------
+# KAFKA CONFIGURATION
+# ----------------------------------------------------------------------------
+
+KAFKA_BOOTSTRAP = os.environ.get(
+    "KAFKA_BOOTSTRAP", "localhost:9092"
+)
+
+KAFKA_SECURITY_PROTOCOL = os.environ.get(
+    "KAFKA_SECURITY_PROTOCOL", "PLAINTEXT"
+)
+
+KAFKA_SASL_MECHANISM = os.environ.get(
+    "KAFKA_SASL_MECHANISM", "PLAIN"
+)
+
+KAFKA_USERNAME = os.environ.get("KAFKA_USERNAME", "")
+KAFKA_PASSWORD = os.environ.get("KAFKA_PASSWORD", "")

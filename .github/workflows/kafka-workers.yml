@@ -1,0 +1,57 @@
+
+name: Kafka Workers
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kafka-workers
+  cancel-in-progress: false
+
+jobs:
+  process-events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      KAFKA_BOOTSTRAP: ${{ secrets.KAFKA_BOOTSTRAP }}
+      KAFKA_SECURITY_PROTOCOL: SASL_SSL
+      KAFKA_SASL_MECHANISM: PLAIN
+      KAFKA_USERNAME: ${{ secrets.KAFKA_USERNAME }}
+      KAFKA_PASSWORD: ${{ secrets.KAFKA_PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Kafka CA certificate
+        env:
+          KAFKA_CA_PEM: ${{ secrets.KAFKA_CA_PEM }}
+        run: printf '%s\n' "$KAFKA_CA_PEM" > ca.pem
+
+      - name: Publish outbox events
+        run: python manage.py outbox_relay --once
+
+      - name: Process Kafka events
+        run: python manage.py summary_consumer --once
