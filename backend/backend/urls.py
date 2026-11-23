@@ -23,9 +23,6 @@ urlpatterns = [
     # Existing users API users
     path("api/users/", include("users.urls")),
 
-    # expenses
-    path('api/expenses/', include('expenses.urls')),
-
     #groups
     path('api/groups/', include('groups.urls')),  
 

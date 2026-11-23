@@ -11,6 +11,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from decimal import Decimal
+import uuid
 
 
 class Group(models.Model):
@@ -93,3 +94,23 @@ class ExpenseSplit(models.Model):
         if not GroupMember.objects.filter(group=self.expense.group, user=self.user).exists():
             raise ValueError("User must be a member of the group")
         super().save(*args, **kwargs)
+
+class OutboxEvent(models.Model):
+    event_id = models.UUIDField(default=uuid.uuid4, unique=True)
+    topic = models.CharField(max_length=100)
+    key = models.CharField(max_length=100)
+    payload = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    published = models.BooleanField(default=False, db_index=True)
+
+
+class ProcessedEvent(models.Model):
+    event_id = models.UUIDField(unique=True)
+
+
+class GroupSummary(models.Model):
+    group = models.OneToOneField(Group, on_delete=models.CASCADE, related_name="summary")
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    transactions = models.IntegerField(default=0)
+    balances = models.JSONField(default=dict)
+    updated_at = models.DateTimeField(auto_now=True)

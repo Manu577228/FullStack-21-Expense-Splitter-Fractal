@@ -60,7 +60,6 @@ INSTALLED_APPS = [
 
     # Local applications
     "users",
-    "expenses",
     "groups",
 ]
 
@@ -255,3 +254,5 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.onrender.com",
     "https://*.vercel.app",
 ]
+
+KAFKA_BOOTSTRAP = "localhost:9092"

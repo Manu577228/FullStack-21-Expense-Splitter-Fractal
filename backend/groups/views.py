@@ -17,7 +17,7 @@ from django.db.models import Sum, Q
 from collections import defaultdict
 from decimal import Decimal
 
-from .models import Group, GroupMember, GroupExpense, ExpenseSplit
+from .models import Group, GroupMember, GroupExpense, ExpenseSplit, GroupSummary
 from .serializers import (
     GroupSerializer, AddMemberSerializer, CreateExpenseSerializer,
     GroupExpenseSerializer, GroupSummarySerializer
@@ -157,68 +157,38 @@ def add_expense(request, group_id):
 @permission_classes([IsAuthenticated])
 def group_summary(request, group_id):
     group = get_object_or_404(Group, id=group_id)
-    
-    # Check if user is member of the group
+
     if not GroupMember.objects.filter(group=group, user=request.user).exists():
         return Response(
-            {"error": "You are not a member of this group"}, 
+            {"error": "You are not a member of this group"},
             status=status.HTTP_403_FORBIDDEN
         )
-    
-    # Get all members
+
     members = GroupMember.objects.filter(group=group).select_related('user')
-    
-    # Get all expenses
-    expenses = GroupExpense.objects.filter(group=group).select_related('paid_by').prefetch_related('splits__user')
-    
-    # Calculate balances
-    balances = defaultdict(lambda: {'paid': Decimal('0.00'), 'owes': Decimal('0.00')})
-    
-    for member in members:
-        balances[member.user.username] = {
-            'id': member.user.id,
-            'username': member.user.username,
-            'email': member.user.email,
-            'paid': Decimal('0.00'),
-            'owes': Decimal('0.00')
-        }
-    
-    # Calculate what each member paid
-    for expense in expenses:
-        balances[expense.paid_by.username]['paid'] += expense.amount
-    
-    # Calculate what each member owes
-    for expense in expenses:
-        for split in expense.splits.all():
-            balances[split.user.username]['owes'] += split.amount
-    
-    # Calculate net balance (positive means they should receive, negative means they owe)
+    summary = GroupSummary.objects.filter(group=group).first()
+    stored = summary.balances if summary else {}
+
     member_balances = []
-    for username, balance in balances.items():
-        net_balance = balance['paid'] - balance['owes']
+    for m in members:
+        row = stored.get(str(m.user.id), {"paid": "0.00", "owes": "0.00"})
+        paid, owes = Decimal(row["paid"]), Decimal(row["owes"])
         member_balances.append({
-            'id': balance['id'],
-            'username': balance['username'],
-            'email': balance['email'],
-            'paid': float(balance['paid']),
-            'owes': float(balance['owes']),
-            'net_balance': float(net_balance)
+            'id': m.user.id,
+            'username': m.user.username,
+            'email': m.user.email,
+            'paid': float(paid),
+            'owes': float(owes),
+            'net_balance': float(paid - owes),
         })
-    
-    # Recent expenses (last 10)
-    recent_expenses = expenses[:10]
-    
-    # Total amount
-    total_amount = expenses.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    
-    summary_data = {
+
+    expenses = GroupExpense.objects.filter(group=group).select_related('paid_by').prefetch_related('splits__user')
+
+    return Response({
         'member_balances': member_balances,
-        'total_amount': float(total_amount),
-        'total_expenses_count': expenses.count(),
-        'recent_expenses': GroupExpenseSerializer(recent_expenses, many=True).data
-    }
-    
-    return Response(summary_data)
+        'total_amount': float(summary.total_amount) if summary else 0.0,
+        'total_expenses_count': summary.transactions if summary else 0,
+        'recent_expenses': GroupExpenseSerializer(expenses[:10], many=True).data,
+    })
 
 
 @api_view(['DELETE'])
