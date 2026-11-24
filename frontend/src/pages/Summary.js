@@ -9,7 +9,7 @@
 /* --------------------------------------------------------------------------*/
 
 import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   Container,
   Typography,
@@ -179,28 +179,58 @@ export default function Summary() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    loadSummary();
-    // eslint-disable-next-line
+  const requestId = useRef(0);
+  const inFlight = useRef(false);
+
+  const loadSummary = useCallback(async (silent = false) => {
+    if (silent && inFlight.current) return;
+    const id = ++requestId.current;
+    inFlight.current = true;
+    if (!silent) {
+      setError("");
+      setLoading(true);
+    }
+    try {
+      const [gRes, sRes] = await Promise.all([
+        apiFetch(`/api/groups/${groupId}/`),
+        apiFetch(`/api/groups/${groupId}/summary/`)
+      ]);
+      if (!gRes?.ok || !sRes?.ok) throw new Error("Failed to load summary");
+      const [groupData, summary] = await Promise.all([gRes.json(), sRes.json()]);
+      if (id !== requestId.current) return;
+      setGroup(groupData);
+      setSummaryData(summary);
+      setError("");
+    } catch (err) {
+      if (id === requestId.current && !silent) {
+        setError("Error loading summary: " + err.message);
+      }
+    } finally {
+      if (id === requestId.current) {
+        inFlight.current = false;
+        setLoading(false);
+      }
+    }
   }, [groupId]);
 
-  const loadSummary = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      const gRes = await apiFetch(`/api/groups/${groupId}/`);
-      if (!gRes?.ok) throw new Error("Failed to load group");
-      setGroup(await gRes.json());
+  useEffect(() => {
+    loadSummary();
+    const onFocus = () => loadSummary(true);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      requestId.current++;
+      inFlight.current = false;
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [loadSummary]);
 
-      const sRes = await apiFetch(`/api/groups/${groupId}/summary/`);
-      if (!sRes?.ok) throw new Error("Failed to load summary");
-      setSummaryData(await sRes.json());
-    } catch (err) {
-      setError("Error loading summary: " + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (summaryData?.is_synced !== false) return;
+    const interval = setInterval(() => {
+      if (!document.hidden) loadSummary(true);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [summaryData?.is_synced, loadSummary]);
 
   /* ---------- Loading ---------- */
   if (loading)
@@ -304,7 +334,7 @@ export default function Summary() {
                 variant="contained"
                 disableElevation
                 startIcon={<Refresh />}
-                onClick={loadSummary}
+                onClick={() => loadSummary()}
                 sx={{
                   py: 1.6,
                   px: 4,

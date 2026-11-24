@@ -93,3 +93,35 @@ class GroupAppTests(TestCase):
         })
         self.assertAlmostEqual(float(serializer.data['total_amount']), 130.0)
         self.assertEqual(serializer.data['total_expenses_count'], 2)
+
+    def test_summary_before_and_after_kafka(self):
+        from .serializers import CreateExpenseSerializer
+        from .models import OutboxEvent
+        from .services import apply_event
+
+        serializer = CreateExpenseSerializer(data={
+            'description': 'Dinner',
+            'amount': '100.00',
+            'paid_by_username': 'user1',
+            'split_type': 'equal',
+        }, context={'group': self.group})
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+        url = reverse('group-summary', args=[self.group.id])
+        before = self.client.get(url)
+        self.assertEqual(before.status_code, 200)
+        self.assertEqual(before.data['total_amount'], 100.0)
+        self.assertEqual(before.data['total_expenses_count'], 1)
+        self.assertFalse(before.data['is_synced'])
+        balances = {row['id']: row for row in before.data['member_balances']}
+        self.assertEqual(balances[self.user1.id]['net_balance'], 50.0)
+        self.assertEqual(balances[self.user2.id]['net_balance'], -50.0)
+
+        event = OutboxEvent.objects.get()
+        payload = {**event.payload, 'event_id': str(event.event_id)}
+        apply_event(payload)
+        apply_event(payload)
+        after = self.client.get(url)
+        self.assertTrue(after.data['is_synced'])
+        self.assertEqual(after.data['total_amount'], 100.0)
+        self.assertEqual(after.data['member_balances'], before.data['member_balances'])

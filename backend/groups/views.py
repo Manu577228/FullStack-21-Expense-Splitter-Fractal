@@ -13,7 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Count
 from collections import defaultdict
 from decimal import Decimal
 
@@ -166,7 +166,22 @@ def group_summary(request, group_id):
 
     members = GroupMember.objects.filter(group=group).select_related('user')
     summary = GroupSummary.objects.filter(group=group).first()
-    stored = summary.balances if summary else {}
+    expenses = GroupExpense.objects.filter(group=group)
+    totals = expenses.aggregate(total=Sum('amount'), count=Count('id'))
+    total_amount = totals['total'] or Decimal('0.00')
+    total_count = totals['count']
+    is_synced = (summary is not None and summary.transactions == total_count
+                 and summary.total_amount == total_amount)
+
+    if is_synced:
+        stored = summary.balances
+    else:
+        stored = {}
+        for row in expenses.order_by().values('paid_by_id').annotate(total=Sum('amount')):
+            stored[str(row['paid_by_id'])] = {'paid': str(row['total']), 'owes': '0.00'}
+        for row in ExpenseSplit.objects.filter(expense__group=group).order_by().values('user_id').annotate(total=Sum('amount')):
+            balance = stored.setdefault(str(row['user_id']), {'paid': '0.00', 'owes': '0.00'})
+            balance['owes'] = str(row['total'])
 
     member_balances = []
     for m in members:
@@ -185,8 +200,11 @@ def group_summary(request, group_id):
 
     return Response({
         'member_balances': member_balances,
-        'total_amount': float(summary.total_amount) if summary else 0.0,
-        'total_expenses_count': summary.transactions if summary else 0,
+        'total_amount': float(total_amount),
+        'total_expenses_count': total_count,
+        'is_synced': is_synced,
+        'summary_source': 'projection' if is_synced else 'database',
+        'last_updated_at': summary.updated_at if summary else None,
         'recent_expenses': GroupExpenseSerializer(expenses[:10], many=True).data,
     })
 
